@@ -1,4 +1,5 @@
 import json
+import sys
 import uuid
 from contextlib import asynccontextmanager
 
@@ -8,11 +9,43 @@ from fastapi.routing import APIRoute, Mount
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.agents import AgentLogger, MultiAgentSystem
+from app.agents import SLATE_ADDRESS, SLATE_TOKEN, AgentLogger, MultiAgentSystem
+from slate_client import CortexClient
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Verify Slate Connectivity (Flux & RiceDB)
+    print(f"Verifying Slate connectivity at {SLATE_ADDRESS}...")
+    try:
+        client = CortexClient(
+            address=SLATE_ADDRESS, token=SLATE_TOKEN, run_id="startup-check"
+        )
+
+        # 1. Test Working Memory (Flux)
+        print("Testing Working Memory (Flux)... ", end="")
+        try:
+            client.focus("ping")
+            print("OK")
+        except Exception as e:
+            print(f"Failed: {e}")
+            raise e
+
+        # 2. Test Long-Term Memory (RiceDB)
+        print("Testing Long-Term Memory (RiceDB)... ", end="")
+        try:
+            client.reminisce("ping", limit=1)
+            print("OK")
+        except Exception as e:
+            print(f"Failed: {e}")
+            raise e
+
+        print("All Slate services verified.")
+
+    except Exception:
+        print("Stopping server startup due to connectivity failures.")
+        sys.exit(1)
+
     # Print endpoints on startup
     print("\nServer endpoints:")
     for route in app.routes:
