@@ -1,0 +1,16 @@
+[project]
+name = "slate-demo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = ["google-genai>=1.56.0", "python-dotenv>=1.2.1", "slate-client"]
+
+[tool.uv.sources]
+slate-client = { path = "./slate_client/python", editable = true }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.11",
+    "ty>=0.0.11",
+]
