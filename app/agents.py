@@ -1,10 +1,11 @@
+import inspect
 import os
-import asyncio
-import json
-from typing import Callable, Any, Optional, List, Dict
+from typing import Any, Callable
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
 from slate_client import CortexClient
 
 load_dotenv()
@@ -24,7 +25,8 @@ class AgentLogger:
         self, agent_name: str, event_type: str, content: str, details: Any = None
     ):
         """
-        event_type: 'activation', 'thinking', 'tool_call', 'tool_result', 'slate_call', 'output', 'input'
+        event_type: 'activation', 'thinking', 'tool_call', 'tool_result',
+                    'slate_call', 'output', 'input'
         """
         data = {
             "agent": agent_name,
@@ -32,7 +34,7 @@ class AgentLogger:
             "content": content,
             "details": details,
         }
-        if asyncio.iscoroutinefunction(self.callback):
+        if inspect.iscoroutinefunction(self.callback):
             await self.callback(data)
         else:
             self.callback(data)
@@ -77,7 +79,8 @@ class MultiAgentSystem:
             def remember(content: str) -> str:
                 """
                 Stores a piece of information in working memory (Flux).
-                Use this to keep track of important details, context, or to DELEGATE tasks to the Specialist.
+                Use this to keep track of important details, context,
+                or to DELEGATE tasks to the Specialist.
                 If delegating, start content with "DELEGATE:".
                 """
                 try:
@@ -145,12 +148,13 @@ You are the Manager Agent.
 Your goal is to handle the user's request.
 1. Search history (`search_history`) to see if we've handled similar requests.
 2. If simple, Answer directly.
-3. If complex, DELEGATE to the Specialist by using `remember` with "DELEGATE: <task details>".
+3. If complex, DELEGATE to the Specialist by using `remember`
+   with "DELEGATE: <task details>".
 Do NOT execute complex tasks yourself.
 """
 
             # Initial prompt
-            chat_history = []
+            chat_history = []  # noqa: F841
 
             # Run Manager Loop
             # We use a manual loop to handle tool calls and delegation detection
@@ -164,7 +168,7 @@ Do NOT execute complex tasks yourself.
             )
 
             # Check if delegation happened
-            # We check if "DELEGATE:" string appears in Flux (via drift) or if we can detect it from the tool call log?
+            # We check if "DELEGATE:" string appears in Flux (via drift).
             # Simpler: check if `remember` was called with DELEGATE during the loop.
             # But `_run_agent_loop` returns the final text.
             # Let's check the context (Flux) to see if there is a pending task.
@@ -202,7 +206,8 @@ You are the Specialist Agent.
                     model=GEMINI_MODEL,
                     system_instruction=specialist_sys_instruct,
                     tools=specialist_tools,
-                    prompt="The Manager has delegated a task to you. Check context and execute.",
+                    prompt="The Manager has delegated a task to you. "
+                    "Check context and execute.",
                     tools_map={
                         "recall_context": recall_context,
                         "save_experience": save_experience,
@@ -215,8 +220,18 @@ You are the Specialist Agent.
                 return manager_response
 
         except Exception as e:
-            await self.logger.log("System", "error", str(e))
-            return f"Error: {str(e)}"
+            error_msg = str(e)
+            if (
+                "Connection refused" in error_msg
+                or "StatusCode.UNAVAILABLE" in error_msg
+            ):
+                error_msg = (
+                    f"Could not connect to Slate server at {SLATE_ADDRESS}. "
+                    "Please ensure the server is running and accessible."
+                )
+
+            await self.logger.log("System", "error", error_msg)
+            return f"Error: {error_msg}"
 
     async def _run_agent_loop(
         self, agent_name, model, system_instruction, tools, prompt, tools_map
@@ -261,7 +276,7 @@ You are the Specialist Agent.
                     if fn_name in tools_map:
                         try:
                             # Convert args to dict
-                            args_dict = {k: v for k, v in fn_args.items()}
+                            args_dict = {k: v for k, v in fn_args.items()}  # ty:ignore[possibly-missing-attribute]
                             result = tools_map[fn_name](**args_dict)
                         except Exception as e:
                             result = f"Error executing tool: {e}"

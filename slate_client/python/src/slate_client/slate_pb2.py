@@ -4,63 +4,60 @@
 # source: slate.proto
 # Protobuf Python Version: 6.31.1
 """Generated protocol buffer code."""
+
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 _runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC,
-    6,
-    31,
-    1,
-    '',
-    'slate.proto'
+    _runtime_version.Domain.PUBLIC, 6, 31, 1, "", "slate.proto"
 )
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bslate.proto\x12\x05slate\"/\n\x0c\x46ocusRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x0e\n\x06run_id\x18\x02 \x01(\t\"\x1b\n\rFocusResponse\x12\n\n\x02id\x18\x01 \x01(\t\"\x1e\n\x0c\x44riftRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\"/\n\rDriftResponse\x12\x1e\n\x05items\x18\x01 \x03(\x0b\x32\x0f.slate.FluxItem\":\n\x08\x46luxItem\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\x12\x11\n\trelevance\x18\x03 \x01(\x02\"\x7f\n\x05Trace\x12\r\n\x05input\x18\x01 \x01(\t\x12\x11\n\treasoning\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tion\x18\x03 \x01(\t\x12\x0f\n\x07outcome\x18\x04 \x01(\t\x12\x10\n\x08\x61gent_id\x18\x05 \x01(\t\x12\x11\n\tembedding\x18\x06 \x03(\x02\x12\x0e\n\x06run_id\x18\x07 \x01(\t\"\x16\n\x03\x41\x63k\x12\x0f\n\x07success\x18\x01 \x01(\x08\"e\n\rRecallRequest\x12\x11\n\tembedding\x18\x01 \x03(\x02\x12\r\n\x05limit\x18\x02 \x01(\x04\x12\x12\n\nquery_text\x18\x03 \x01(\t\x12\x0e\n\x06\x66ilter\x18\x04 \x01(\t\x12\x0e\n\x06run_id\x18\x05 \x01(\t\".\n\x0eRecallResponse\x12\x1c\n\x06traces\x18\x01 \x03(\x0b\x32\x0c.slate.Trace\"d\n\x0cQueryRequest\x12\x11\n\tembedding\x18\x01 \x03(\x02\x12\r\n\x05limit\x18\x02 \x01(\x04\x12\x12\n\nquery_text\x18\x03 \x01(\t\x12\x0e\n\x06\x66ilter\x18\x04 \x01(\t\x12\x0e\n\x06run_id\x18\x05 \x01(\t\"\x1c\n\nRunRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t\"/\n\x11KnowledgeResponse\x12\x1a\n\x05\x66\x61\x63ts\x18\x01 \x03(\x0b\x32\x0b.slate.Fact\"3\n\x04\x46\x61\x63t\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\x12\x0e\n\x06source\x18\x03 \x01(\t\"#\n\rReflexRequest\x12\x12\n\nskill_name\x18\x01 \x01(\t\"!\n\x0f\x45xecutionResult\x12\x0e\n\x06result\x18\x01 \x01(\x05\x32\xed\x02\n\x06\x43ortex\x12\x32\n\x05\x46ocus\x12\x13.slate.FocusRequest\x1a\x14.slate.FocusResponse\x12\x32\n\x05\x44rift\x12\x13.slate.DriftRequest\x1a\x14.slate.DriftResponse\x12\"\n\x06\x43ommit\x12\x0c.slate.Trace\x1a\n.slate.Ack\x12\x38\n\tReminisce\x12\x14.slate.RecallRequest\x1a\x15.slate.RecallResponse\x12\x38\n\x07\x43onsult\x12\x13.slate.QueryRequest\x1a\x18.slate.KnowledgeResponse\x12\x37\n\x07Trigger\x12\x14.slate.ReflexRequest\x1a\x16.slate.ExecutionResult\x12*\n\tDeleteRun\x12\x11.slate.RunRequest\x1a\n.slate.Ackb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x0bslate.proto\x12\x05slate"/\n\x0c\x46ocusRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x0e\n\x06run_id\x18\x02 \x01(\t"\x1b\n\rFocusResponse\x12\n\n\x02id\x18\x01 \x01(\t"\x1e\n\x0c\x44riftRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t"/\n\rDriftResponse\x12\x1e\n\x05items\x18\x01 \x03(\x0b\x32\x0f.slate.FluxItem":\n\x08\x46luxItem\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\x12\x11\n\trelevance\x18\x03 \x01(\x02"\x7f\n\x05Trace\x12\r\n\x05input\x18\x01 \x01(\t\x12\x11\n\treasoning\x18\x02 \x01(\t\x12\x0e\n\x06\x61\x63tion\x18\x03 \x01(\t\x12\x0f\n\x07outcome\x18\x04 \x01(\t\x12\x10\n\x08\x61gent_id\x18\x05 \x01(\t\x12\x11\n\tembedding\x18\x06 \x03(\x02\x12\x0e\n\x06run_id\x18\x07 \x01(\t"\x16\n\x03\x41\x63k\x12\x0f\n\x07success\x18\x01 \x01(\x08"e\n\rRecallRequest\x12\x11\n\tembedding\x18\x01 \x03(\x02\x12\r\n\x05limit\x18\x02 \x01(\x04\x12\x12\n\nquery_text\x18\x03 \x01(\t\x12\x0e\n\x06\x66ilter\x18\x04 \x01(\t\x12\x0e\n\x06run_id\x18\x05 \x01(\t".\n\x0eRecallResponse\x12\x1c\n\x06traces\x18\x01 \x03(\x0b\x32\x0c.slate.Trace"d\n\x0cQueryRequest\x12\x11\n\tembedding\x18\x01 \x03(\x02\x12\r\n\x05limit\x18\x02 \x01(\x04\x12\x12\n\nquery_text\x18\x03 \x01(\t\x12\x0e\n\x06\x66ilter\x18\x04 \x01(\t\x12\x0e\n\x06run_id\x18\x05 \x01(\t"\x1c\n\nRunRequest\x12\x0e\n\x06run_id\x18\x01 \x01(\t"/\n\x11KnowledgeResponse\x12\x1a\n\x05\x66\x61\x63ts\x18\x01 \x03(\x0b\x32\x0b.slate.Fact"3\n\x04\x46\x61\x63t\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\x12\x0e\n\x06source\x18\x03 \x01(\t"#\n\rReflexRequest\x12\x12\n\nskill_name\x18\x01 \x01(\t"!\n\x0f\x45xecutionResult\x12\x0e\n\x06result\x18\x01 \x01(\x05\x32\xed\x02\n\x06\x43ortex\x12\x32\n\x05\x46ocus\x12\x13.slate.FocusRequest\x1a\x14.slate.FocusResponse\x12\x32\n\x05\x44rift\x12\x13.slate.DriftRequest\x1a\x14.slate.DriftResponse\x12"\n\x06\x43ommit\x12\x0c.slate.Trace\x1a\n.slate.Ack\x12\x38\n\tReminisce\x12\x14.slate.RecallRequest\x1a\x15.slate.RecallResponse\x12\x38\n\x07\x43onsult\x12\x13.slate.QueryRequest\x1a\x18.slate.KnowledgeResponse\x12\x37\n\x07Trigger\x12\x14.slate.ReflexRequest\x1a\x16.slate.ExecutionResult\x12*\n\tDeleteRun\x12\x11.slate.RunRequest\x1a\n.slate.Ackb\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'slate_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "slate_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_FOCUSREQUEST']._serialized_start=22
-  _globals['_FOCUSREQUEST']._serialized_end=69
-  _globals['_FOCUSRESPONSE']._serialized_start=71
-  _globals['_FOCUSRESPONSE']._serialized_end=98
-  _globals['_DRIFTREQUEST']._serialized_start=100
-  _globals['_DRIFTREQUEST']._serialized_end=130
-  _globals['_DRIFTRESPONSE']._serialized_start=132
-  _globals['_DRIFTRESPONSE']._serialized_end=179
-  _globals['_FLUXITEM']._serialized_start=181
-  _globals['_FLUXITEM']._serialized_end=239
-  _globals['_TRACE']._serialized_start=241
-  _globals['_TRACE']._serialized_end=368
-  _globals['_ACK']._serialized_start=370
-  _globals['_ACK']._serialized_end=392
-  _globals['_RECALLREQUEST']._serialized_start=394
-  _globals['_RECALLREQUEST']._serialized_end=495
-  _globals['_RECALLRESPONSE']._serialized_start=497
-  _globals['_RECALLRESPONSE']._serialized_end=543
-  _globals['_QUERYREQUEST']._serialized_start=545
-  _globals['_QUERYREQUEST']._serialized_end=645
-  _globals['_RUNREQUEST']._serialized_start=647
-  _globals['_RUNREQUEST']._serialized_end=675
-  _globals['_KNOWLEDGERESPONSE']._serialized_start=677
-  _globals['_KNOWLEDGERESPONSE']._serialized_end=724
-  _globals['_FACT']._serialized_start=726
-  _globals['_FACT']._serialized_end=777
-  _globals['_REFLEXREQUEST']._serialized_start=779
-  _globals['_REFLEXREQUEST']._serialized_end=814
-  _globals['_EXECUTIONRESULT']._serialized_start=816
-  _globals['_EXECUTIONRESULT']._serialized_end=849
-  _globals['_CORTEX']._serialized_start=852
-  _globals['_CORTEX']._serialized_end=1217
+    DESCRIPTOR._loaded_options = None
+    _globals["_FOCUSREQUEST"]._serialized_start = 22
+    _globals["_FOCUSREQUEST"]._serialized_end = 69
+    _globals["_FOCUSRESPONSE"]._serialized_start = 71
+    _globals["_FOCUSRESPONSE"]._serialized_end = 98
+    _globals["_DRIFTREQUEST"]._serialized_start = 100
+    _globals["_DRIFTREQUEST"]._serialized_end = 130
+    _globals["_DRIFTRESPONSE"]._serialized_start = 132
+    _globals["_DRIFTRESPONSE"]._serialized_end = 179
+    _globals["_FLUXITEM"]._serialized_start = 181
+    _globals["_FLUXITEM"]._serialized_end = 239
+    _globals["_TRACE"]._serialized_start = 241
+    _globals["_TRACE"]._serialized_end = 368
+    _globals["_ACK"]._serialized_start = 370
+    _globals["_ACK"]._serialized_end = 392
+    _globals["_RECALLREQUEST"]._serialized_start = 394
+    _globals["_RECALLREQUEST"]._serialized_end = 495
+    _globals["_RECALLRESPONSE"]._serialized_start = 497
+    _globals["_RECALLRESPONSE"]._serialized_end = 543
+    _globals["_QUERYREQUEST"]._serialized_start = 545
+    _globals["_QUERYREQUEST"]._serialized_end = 645
+    _globals["_RUNREQUEST"]._serialized_start = 647
+    _globals["_RUNREQUEST"]._serialized_end = 675
+    _globals["_KNOWLEDGERESPONSE"]._serialized_start = 677
+    _globals["_KNOWLEDGERESPONSE"]._serialized_end = 724
+    _globals["_FACT"]._serialized_start = 726
+    _globals["_FACT"]._serialized_end = 777
+    _globals["_REFLEXREQUEST"]._serialized_start = 779
+    _globals["_REFLEXREQUEST"]._serialized_end = 814
+    _globals["_EXECUTIONRESULT"]._serialized_start = 816
+    _globals["_EXECUTIONRESULT"]._serialized_end = 849
+    _globals["_CORTEX"]._serialized_start = 852
+    _globals["_CORTEX"]._serialized_end = 1217
 # @@protoc_insertion_point(module_scope)

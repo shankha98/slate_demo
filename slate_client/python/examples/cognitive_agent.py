@@ -2,11 +2,12 @@ import os
 import sys
 
 # Ensure slate_client is importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
 from slate_client import CortexClient
 
 # Load env
@@ -17,15 +18,18 @@ load_dotenv()
 slate = CortexClient(
     address=os.environ.get("SLATE_INSTANCE_URL", "localhost:50051"),
     token=os.environ.get("SLATE_AUTH_TOKEN", "dev_secret"),
-    run_id="cognitive-agent-run"
+    run_id="cognitive-agent-run",
 )
+
 
 def log_internal_action(action_type: str, details: str):
     """Logs internal cognitive actions for transparency."""
     print(f"\n[INTERNAL ACTION] {action_type}: {details}")
 
+
 # --- Cognitive Actions ---
 # These map directly to the framework's internal action space.
+
 
 def reasoning(context: str) -> str:
     """
@@ -39,6 +43,7 @@ def reasoning(context: str) -> str:
     except Exception as e:
         return f"Error: {e}"
 
+
 def retrieval(query: str) -> str:
     """
     Internal Action: Retrieval.
@@ -49,15 +54,16 @@ def retrieval(query: str) -> str:
         resp = slate.reminisce(query, limit=3)
         if not resp.traces:
             return "No relevant long-term memories found."
-        
+
         memories = [f"- {t.input} -> {t.outcome}" for t in resp.traces]
         result = "\n".join(memories)
-        
+
         # Store retrieved info into Working Memory (standard Cognitive flow)
         slate.focus(f"[RETRIEVED] {result}")
         return f"Retrieved and stored in Working Memory:\n{result}"
     except Exception as e:
         return f"Error: {e}"
+
 
 def learning(experience: str, outcome: str) -> str:
     """
@@ -66,10 +72,13 @@ def learning(experience: str, outcome: str) -> str:
     """
     log_internal_action("Learning", f"Committing experience: {experience[:50]}...")
     try:
-        slate.commit(experience, outcome, action="Learning", reasoning="Cognitive Update")
+        slate.commit(
+            experience, outcome, action="Learning", reasoning="Cognitive Update"
+        )
         return "Experience learned (saved to Episodic Memory)."
     except Exception as e:
         return f"Error: {e}"
+
 
 def grounding_web_search(query: str) -> str:
     """
@@ -80,7 +89,9 @@ def grounding_web_search(query: str) -> str:
     # Simulation of external environment feedback
     return f"Search Results for {query}: [Simulated Result 1], [Simulated Result 2]"
 
+
 # --- Main Agent Loop (The Decision Procedure) ---
+
 
 def run_cognitive_agent():
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -88,7 +99,7 @@ def run_cognitive_agent():
         print("Error: GEMINI_API_KEY not set.")
         return
 
-    client = genai.Client(api_key=api_key, http_options={'api_version': 'v1alpha'})
+    client = genai.Client(api_key=api_key, http_options={"api_version": "v1alpha"})
     model_id = "gemini-3-flash-preview"
 
     # Define the Cognitive Agent System Prompt
@@ -108,8 +119,8 @@ def run_cognitive_agent():
         model=model_id,
         config=types.GenerateContentConfig(
             tools=[reasoning, retrieval, learning, grounding_web_search],
-            system_instruction=system_prompt
-        )
+            system_instruction=system_prompt,
+        ),
     )
 
     print(f"--- Starting Cognitive Agent (Model: {model_id}) ---\n")
@@ -125,11 +136,14 @@ def run_cognitive_agent():
     # Step 2: Follow-up (Simulating the loop)
     # In a real loop, we would automatically feed observations back.
     # Here we prompt for the next step in the cycle.
-    next_step_prompt = "Based on your previous actions, what is the next step in your decision cycle?"
+    next_step_prompt = (
+        "Based on your previous actions, what is the next step in your decision cycle?"
+    )
     print(f"\n[System Loop]: {next_step_prompt}")
-    
+
     response = chat.send_message(next_step_prompt)
     print(f"\nAgent: {response.text}")
+
 
 if __name__ == "__main__":
     run_cognitive_agent()

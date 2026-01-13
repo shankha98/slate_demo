@@ -1,0 +1,89 @@
+[
+    {
+        "description": "User asks a complex question requiring delegation.",
+        "user_message": "Can you analyze the trends in cloud computing for 2025?",
+        "logs": [
+            {
+                "agent": "System",
+                "type": "input",
+                "content": "User: Can you analyze the trends in cloud computing for 2025?"
+            },
+            {
+                "agent": "System",
+                "type": "slate_call",
+                "content": "Committing user input to Echoes (Memory)"
+            },
+            {
+                "agent": "Manager",
+                "type": "activation",
+                "content": "Manager agent active"
+            },
+            {
+                "agent": "Manager",
+                "type": "thinking",
+                "content": "Processing..."
+            },
+            {
+                "agent": "Manager",
+                "type": "tool_call",
+                "content": "search_history(query='cloud computing trends')"
+            },
+            {
+                "agent": "Manager",
+                "type": "tool_result",
+                "content": "No relevant past experiences found."
+            },
+            {
+                "agent": "Manager",
+                "type": "tool_call",
+                "content": "remember(content='DELEGATE: Analyze cloud computing trends for 2025. Focus on AI integration and edge computing.')"
+            },
+            {
+                "agent": "Manager",
+                "type": "tool_result",
+                "content": "Stored. ID: flux-123"
+            },
+            {
+                "agent": "Manager",
+                "type": "output",
+                "content": "Delegating task: DELEGATE: Analyze cloud computing trends for 2025. Focus on AI integration and edge computing."
+            },
+            {
+                "agent": "Specialist",
+                "type": "activation",
+                "content": "Specialist agent active"
+            },
+            {
+                "agent": "Specialist",
+                "type": "thinking",
+                "content": "Processing..."
+            },
+            {
+                "agent": "Specialist",
+                "type": "tool_call",
+                "content": "recall_context()"
+            },
+            {
+                "agent": "Specialist",
+                "type": "tool_result",
+                "content": "- DELEGATE: Analyze cloud computing trends for 2025... (1.0)"
+            },
+            {
+                "agent": "Specialist",
+                "type": "tool_call",
+                "content": "save_experience(action='Analyze Cloud Trends', outcome='Key trends: AI-driven infrastructure, Sovereign Cloud, Green Cloud...')"
+            },
+            {
+                "agent": "Specialist",
+                "type": "tool_result",
+                "content": "Experience saved."
+            },
+            {
+                "agent": "Specialist",
+                "type": "output",
+                "content": "Based on my analysis, the key trends for 2025 are:\n1. AI-driven Infrastructure\n2. Sovereign Cloud\n3. Green Cloud Computing"
+            }
+        ],
+        "final_response": "Based on my analysis, the key trends for 2025 are:\n1. AI-driven Infrastructure\n2. Sovereign Cloud\n3. Green Cloud Computing"
+    }
+]
