@@ -1,5 +1,7 @@
+import asyncio
 import inspect
 import os
+import time
 from typing import Any, Callable
 
 from dotenv import load_dotenv
@@ -34,10 +36,13 @@ class AgentLogger:
             "content": content,
             "details": details,
         }
-        if inspect.iscoroutinefunction(self.callback):
-            await self.callback(data)
-        else:
-            self.callback(data)
+        try:
+            if inspect.iscoroutinefunction(self.callback):
+                await self.callback(data)
+            else:
+                self.callback(data)
+        except Exception as e:
+            print(f"AgentLogger Error: {e}")
 
 
 class MultiAgentSystem:
@@ -63,20 +68,40 @@ class MultiAgentSystem:
         else:
             self.genai_client = genai.Client(api_key=api_key)
 
+    async def _slate_call(self, func, *args, **kwargs):
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+
     async def process_message(self, user_message: str):
         try:
             # 1. User Input
             await self.logger.log("System", "input", f"User: {user_message}")
 
             # 2. Commit User Input to Echoes
-            await self.logger.log(
-                "System", "slate_call", "Committing user input to Echoes (Memory)"
+            start = time.time()
+            await self._slate_call(
+                self.slate.commit, input=user_message, outcome="", agent_id="user"
             )
-            self.slate.commit(input=user_message, outcome="", agent_id="user")
+            duration = (time.time() - start) * 1000
+            await self.logger.log(
+                "System",
+                "slate_call",
+                f"Committing user input to Echoes (Memory) ({duration:.2f}ms)",
+            )
 
-            # Define Tools Wrapper
+            # Define Tools Wrapper (Note: These must be synchronous for Gemini SDK, but we wrap the calls internally if possible?
+            # NO, Gemini SDK tool calls are synchronous in the loop I wrote.
+            # I call `tools_map[fn_name](...)`.
+            # I need to make my tool implementations use async?
+            # But `_run_agent_loop` calls them synchronously: `result = tools_map[fn_name](**args_dict)`.
+            # So I should make `_run_agent_loop` await them if they are coroutines.
+            # Or I keep them synchronous but use `run_in_executor` INSIDE them?
+            # `run_in_executor` is async (awaitable). I cannot await inside a sync function.
+            # So I must make tools Async.
+            # And `_run_agent_loop` must await them.
+            # Let's do that.
 
-            def remember(content: str) -> str:
+            async def remember(content: str) -> str:
                 """
                 Stores a piece of information in working memory (Flux).
                 Use this to keep track of important details, context,
@@ -84,58 +109,67 @@ class MultiAgentSystem:
                 If delegating, start content with "DELEGATE:".
                 """
                 try:
-                    resp = self.slate.focus(content)
-                    return f"Stored. ID: {resp.id}"
+                    t_start = time.time()
+                    resp = await self._slate_call(self.slate.focus, content)
+                    t_dur = (time.time() - t_start) * 1000
+                    return f"Stored. ID: {resp.id} ({t_dur:.2f}ms)"
                 except Exception as e:
                     return f"Error: {e}"
 
-            def recall_context() -> str:
+            async def recall_context() -> str:
                 """
                 Retrieves the current working memory (Flux) sorted by relevance.
                 Call this to see what you were working on or to get context.
                 """
                 try:
-                    resp = self.slate.drift()
+                    t_start = time.time()
+                    resp = await self._slate_call(self.slate.drift)
+                    t_dur = (time.time() - t_start) * 1000
                     if not hasattr(resp, "items") or not resp.items:
-                        return "Memory is empty."
+                        return f"Memory is empty. ({t_dur:.2f}ms)"
                     items = [
                         f"- {item.content} ({item.relevance:.2f})"
                         for item in resp.items
                     ]
-                    return "\n".join(items)
+                    return "\n".join(items) + f"\n(Latency: {t_dur:.2f}ms)"
                 except Exception as e:
                     return f"Error: {e}"
 
-            def save_experience(action: str, outcome: str) -> str:
+            async def save_experience(action: str, outcome: str) -> str:
                 """
                 Saves an interaction to long-term memory (Echoes).
                 Use this after completing a significant step or action.
                 """
                 try:
-                    self.slate.commit(
+                    t_start = time.time()
+                    await self._slate_call(
+                        self.slate.commit,
                         input=action,
                         outcome=outcome,
                         action=action,
                         agent_id="specialist",
                     )
-                    return "Experience saved."
+                    t_dur = (time.time() - t_start) * 1000
+                    return f"Experience saved. ({t_dur:.2f}ms)"
                 except Exception as e:
                     return f"Error: {e}"
 
-            def search_history(query: str) -> str:
+            async def search_history(query: str) -> str:
                 """
                 Searches long-term memory (Echoes) for past similar experiences.
                 Use this before acting to see if we've done this before.
                 """
                 try:
-                    resp = self.slate.reminisce(query, limit=3)
+                    t_start = time.time()
+                    resp = await self._slate_call(self.slate.reminisce, query, limit=3)
+                    t_dur = (time.time() - t_start) * 1000
                     if not hasattr(resp, "traces") or not resp.traces:
-                        return "No relevant past experiences found."
+                        return f"No relevant past experiences found. ({t_dur:.2f}ms)"
                     traces = [
                         f"- Action: {t.action} | Outcome: {t.outcome}"
                         for t in resp.traces
                     ]
-                    return "\n".join(traces)
+                    return "\n".join(traces) + f"\n(Latency: {t_dur:.2f}ms)"
                 except Exception as e:
                     return f"Error: {e}"
 
@@ -174,13 +208,29 @@ Do NOT execute complex tasks yourself.
             # Let's check the context (Flux) to see if there is a pending task.
 
             # Read Flux to see if there is a DELEGATE task
-            drift_resp = self.slate.drift()
+            start_drift = time.time()
+            drift_resp = await self._slate_call(self.slate.drift)
+            dur_drift = (time.time() - start_drift) * 1000
+            await self.logger.log(
+                "System",
+                "slate_call",
+                f"Checking for delegation in Flux ({dur_drift:.2f}ms)",
+            )
+
             delegated_task = None
             if hasattr(drift_resp, "items"):
+                completed_tasks = set()
                 for item in drift_resp.items:
-                    if "DELEGATE:" in item.content:
-                        delegated_task = item.content
-                        break
+                    if item.content.startswith("Task Completed: "):
+                        completed_tasks.add(
+                            item.content.replace("Task Completed: ", "")
+                        )
+
+                for item in drift_resp.items:
+                    if item.content.startswith("DELEGATE:"):
+                        if item.content not in completed_tasks:
+                            delegated_task = item.content
+                            break
 
             if delegated_task:
                 await self.logger.log(
@@ -213,6 +263,11 @@ You are the Specialist Agent.
                         "save_experience": save_experience,
                         "search_history": search_history,
                     },
+                )
+
+                # Mark task as done in Flux to prevent re-execution in future turns
+                await self._slate_call(
+                    self.slate.focus, f"Task Completed: {delegated_task}"
                 )
 
                 return specialist_response
@@ -277,7 +332,12 @@ You are the Specialist Agent.
                         try:
                             # Convert args to dict
                             args_dict = {k: v for k, v in fn_args.items()}  # ty:ignore[possibly-missing-attribute]
-                            result = tools_map[fn_name](**args_dict)
+                            # Check if tool is async
+                            tool_func = tools_map[fn_name]
+                            if inspect.iscoroutinefunction(tool_func):
+                                result = await tool_func(**args_dict)
+                            else:
+                                result = tool_func(**args_dict)
                         except Exception as e:
                             result = f"Error executing tool: {e}"
                     else:
