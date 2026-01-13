@@ -11,7 +11,7 @@ from slate_client import CortexClient
 load_dotenv()
 
 # Configuration
-GEMINI_MODEL = "gemini-3-flash-preview"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 SLATE_ADDRESS = os.getenv("SLATE_ADDRESS", "localhost:50051")
 SLATE_TOKEN = os.getenv("SLATE_TOKEN", "")

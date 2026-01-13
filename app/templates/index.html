@@ -4,144 +4,224 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Slate Multi-Agent Demo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Inter Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              border: "hsl(var(--border))",
+              input: "hsl(var(--input))",
+              ring: "hsl(var(--ring))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: {
+                DEFAULT: "hsl(var(--primary))",
+                foreground: "hsl(var(--primary-foreground))",
+              },
+              secondary: {
+                DEFAULT: "hsl(var(--secondary))",
+                foreground: "hsl(var(--secondary-foreground))",
+              },
+              destructive: {
+                DEFAULT: "hsl(var(--destructive))",
+                foreground: "hsl(var(--destructive-foreground))",
+              },
+              muted: {
+                DEFAULT: "hsl(var(--muted))",
+                foreground: "hsl(var(--muted-foreground))",
+              },
+              accent: {
+                DEFAULT: "hsl(var(--accent))",
+                foreground: "hsl(var(--accent-foreground))",
+              },
+              popover: {
+                DEFAULT: "hsl(var(--popover))",
+                foreground: "hsl(var(--popover-foreground))",
+              },
+              card: {
+                DEFAULT: "hsl(var(--card))",
+                foreground: "hsl(var(--card-foreground))",
+              },
+            },
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+          },
+        },
+      };
+    </script>
     <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-        margin: 0;
+      @layer base {
+        :root {
+          --background: 0 0% 100%;
+          --foreground: 240 10% 3.9%;
+          --card: 0 0% 100%;
+          --card-foreground: 240 10% 3.9%;
+          --popover: 0 0% 100%;
+          --popover-foreground: 240 10% 3.9%;
+          --primary: 240 5.9% 10%;
+          --primary-foreground: 0 0% 98%;
+          --secondary: 240 4.8% 95.9%;
+          --secondary-foreground: 240 5.9% 10%;
+          --muted: 240 4.8% 95.9%;
+          --muted-foreground: 240 3.8% 46.1%;
+          --accent: 240 4.8% 95.9%;
+          --accent-foreground: 240 5.9% 10%;
+          --destructive: 0 84.2% 60.2%;
+          --destructive-foreground: 0 0% 98%;
+          --border: 240 5.9% 90%;
+          --input: 240 5.9% 90%;
+          --ring: 240 10% 3.9%;
+          --radius: 0.5rem;
+        }
+      }
+
+      /* Markdown Styles */
+      .prose h1 {
+        font-size: 1.5em;
+        font-weight: 700;
+        margin-bottom: 0.5em;
+      }
+      .prose h2 {
+        font-size: 1.25em;
+        font-weight: 600;
+        margin-bottom: 0.5em;
+        margin-top: 1em;
+      }
+      .prose h3 {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin-bottom: 0.5em;
+        margin-top: 1em;
+      }
+      .prose p {
+        margin-bottom: 0.8em;
+        line-height: 1.6;
+      }
+      .prose ul {
+        list-style-type: disc;
+        padding-left: 1.5em;
+        margin-bottom: 0.8em;
+      }
+      .prose ol {
+        list-style-type: decimal;
+        padding-left: 1.5em;
+        margin-bottom: 0.8em;
+      }
+      .prose strong {
+        font-weight: 600;
+      }
+      .prose code {
+        background-color: #f3f4f6;
+        padding: 0.2em 0.4em;
+        border-radius: 0.25rem;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+      .prose pre {
+        background-color: #1f2937;
+        color: #f3f4f6;
+        padding: 1em;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        margin-bottom: 1em;
+      }
+      .prose pre code {
+        background-color: transparent;
         padding: 0;
-        display: flex;
-        height: 100vh;
-        background-color: #f0f2f5;
-      }
-
-      #chat-container {
-        width: 50%;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid #ccc;
-        background: white;
-      }
-
-      #agent-brain-container {
-        width: 50%;
-        display: flex;
-        flex-direction: column;
-        background: #1e1e1e;
-        color: #d4d4d4;
-        padding: 20px;
-        overflow-y: auto;
-        font-family: "Consolas", "Monaco", "Courier New", monospace;
-      }
-
-      #chat-history {
-        flex-grow: 1;
-        padding: 20px;
-        overflow-y: auto;
-      }
-
-      .message {
-        margin-bottom: 15px;
-        max-width: 80%;
-        padding: 10px 15px;
-        border-radius: 18px;
-        line-height: 1.5;
-      }
-
-      .message.user {
-        background-color: #0084ff;
-        color: white;
-        align-self: flex-end;
-        margin-left: auto;
-        border-bottom-right-radius: 4px;
-      }
-
-      .message.bot {
-        background-color: #e4e6eb;
-        color: black;
-        align-self: flex-start;
-        border-bottom-left-radius: 4px;
-      }
-
-      #input-area {
-        padding: 20px;
-        border-top: 1px solid #ddd;
-        display: flex;
-      }
-
-      #message-input {
-        flex-grow: 1;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        font-size: 16px;
-        outline: none;
-      }
-
-      #send-btn {
-        background-color: #0084ff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        margin-left: 10px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-weight: bold;
-      }
-
-      .log-entry {
-        margin-bottom: 10px;
-        border-bottom: 1px solid #333;
-        padding-bottom: 5px;
-      }
-
-      .log-time {
-        color: #888;
-        font-size: 0.8em;
-      }
-
-      .log-agent {
-        color: #569cd6;
-        font-weight: bold;
-      }
-
-      .log-type {
-        color: #c586c0;
-        font-style: italic;
-      }
-
-      .log-content {
-        white-space: pre-wrap;
-        margin-top: 5px;
-      }
-
-      h2 {
-        margin-top: 0;
-        border-bottom: 1px solid #555;
-        padding-bottom: 10px;
+        color: inherit;
       }
     </style>
   </head>
-  <body>
-    <div id="chat-container">
-      <div style="padding: 20px; border-bottom: 1px solid #ddd">
-        <h1 style="margin: 0; font-size: 1.2em">Chat Interface</h1>
+  <body
+    class="bg-background text-foreground font-sans h-screen flex overflow-hidden"
+  >
+    <!-- Left Panel: Chat -->
+    <div class="w-1/2 flex flex-col border-r border-border bg-card">
+      <div class="p-6 border-b border-border flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight">Slate Chat</h1>
+          <p class="text-sm text-muted-foreground">Multi-Agent System</p>
+        </div>
+        <div
+          class="h-2 w-2 rounded-full bg-green-500 animate-pulse"
+          title="Connected"
+        ></div>
       </div>
-      <div id="chat-history"></div>
-      <div id="input-area">
-        <input
-          type="text"
-          id="message-input"
-          placeholder="Type a message..."
-          autocomplete="off"
-        />
-        <button id="send-btn">Send</button>
+
+      <div id="chat-history" class="flex-1 p-6 overflow-y-auto space-y-4">
+        <!-- Messages will appear here -->
+        <div class="flex justify-start">
+          <div
+            class="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 max-w-[85%] text-sm shadow-sm"
+          >
+            Hello! I am your Slate-powered assistant. Ask me anything.
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-border bg-background">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="message-input"
+            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            placeholder="Type your message..."
+            autocomplete="off"
+          />
+          <button
+            id="send-btn"
+            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          >
+            Send
+          </button>
+        </div>
       </div>
     </div>
 
-    <div id="agent-brain-container">
-      <h2>Agent Processes</h2>
-      <div id="logs"></div>
+    <!-- Right Panel: Agent Internals -->
+    <div class="w-1/2 flex flex-col bg-zinc-950 text-zinc-50">
+      <div class="p-4 border-b border-zinc-800 bg-zinc-900/50">
+        <h2 class="text-sm font-medium flex items-center gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-activity"
+          >
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          System Activity
+        </h2>
+      </div>
+
+      <div
+        id="logs"
+        class="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-3"
+      >
+        <!-- Logs will appear here -->
+      </div>
     </div>
 
     <script>
@@ -160,35 +240,61 @@
         if (data.type === "final_response") {
           addMessage("bot", data.content);
         } else if (data.agent) {
-          // It's a log event
           addLog(data);
         }
       };
 
       function addMessage(sender, text) {
         const div = document.createElement("div");
-        div.className = `message ${sender}`;
-        div.textContent = text;
+        div.className = `flex ${
+          sender === "user" ? "justify-end" : "justify-start"
+        }`;
+
+        const bubble = document.createElement("div");
+        bubble.className =
+          sender === "user"
+            ? "bg-primary text-primary-foreground rounded-lg px-4 py-2 max-w-[85%] text-sm shadow-sm"
+            : "bg-secondary text-secondary-foreground rounded-lg px-4 py-2 max-w-[85%] text-sm shadow-sm prose prose-sm max-w-none";
+
+        if (sender === "bot") {
+          bubble.innerHTML = marked.parse(text);
+        } else {
+          bubble.textContent = text;
+        }
+
+        div.appendChild(bubble);
         chatHistory.appendChild(div);
         chatHistory.scrollTop = chatHistory.scrollHeight;
       }
 
       function addLog(data) {
         const div = document.createElement("div");
-        div.className = "log-entry";
+        div.className =
+          "border-l-2 border-zinc-700 pl-3 py-1 animate-in fade-in slide-in-from-bottom-2 duration-300";
 
-        const time = new Date().toLocaleTimeString();
+        const time = new Date().toLocaleTimeString([], { hour12: false });
+
+        // Color coding for agents
+        let agentColor = "text-blue-400";
+        if (data.agent === "Manager") agentColor = "text-purple-400";
+        if (data.agent === "Specialist") agentColor = "text-orange-400";
+        if (data.agent === "System") agentColor = "text-zinc-500";
 
         div.innerHTML = `
-              <span class="log-time">[${time}]</span>
-              <span class="log-agent">${data.agent}</span>
-              <span class="log-type">${data.type}</span>
-              <div class="log-content">${escapeHtml(data.content)}</div>
-          `;
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-zinc-500 text-[10px]">${time}</span>
+              <span class="font-bold ${agentColor}">${data.agent}</span>
+              <span class="text-zinc-400 text-[10px] uppercase tracking-wider bg-zinc-900 px-1 rounded">${
+                data.type
+              }</span>
+            </div>
+            <div class="text-zinc-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(
+              data.content
+            )}</div>
+        `;
 
         logs.appendChild(div);
-        // Auto scroll to bottom
-        const container = document.getElementById("agent-brain-container");
+        const container = logs;
         container.scrollTop = container.scrollHeight;
       }
 
