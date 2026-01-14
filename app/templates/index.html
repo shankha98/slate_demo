@@ -197,20 +197,12 @@
 
           <div id="init-error" class="text-sm text-destructive hidden"></div>
 
-          <div class="flex gap-2">
-            <button
-              id="init-validate-btn"
-              class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2"
-            >
-              Validate
-            </button>
-            <button
-              id="init-connect-btn"
-              class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-            >
-              Connect
-            </button>
-          </div>
+          <button
+            id="init-connect-btn"
+            class="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          >
+            Connect
+          </button>
         </div>
       </div>
     </div>
@@ -223,7 +215,16 @@
       <div
         class="bg-card border border-border rounded-lg shadow-lg p-6 w-full max-w-md"
       >
-        <h2 class="text-lg font-semibold mb-4">Connection Settings</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Connection Settings</h2>
+          <button
+            id="close-settings"
+            class="text-muted-foreground hover:text-foreground text-xl leading-none"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
         <div class="space-y-4">
           <div class="space-y-2">
             <label class="text-sm font-medium">Gemini API Key</label>
@@ -271,7 +272,7 @@
                 class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-3 py-2"
                 title="Generate new Memory ID"
               >
-                🔄
+                Reset Memory
               </button>
             </div>
           </div>
@@ -286,7 +287,7 @@
               id="save-settings"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
             >
-              Connect & Save
+              Save
             </button>
           </div>
         </div>
@@ -405,7 +406,6 @@
       // Elements
       const initialModal = document.getElementById("initial-settings-modal");
       const initConnectBtn = document.getElementById("init-connect-btn");
-      const initValidateBtn = document.getElementById("init-validate-btn");
       const initError = document.getElementById("init-error");
       const settingsModal = document.getElementById("settings-modal");
       const openSettingsBtn = document.getElementById("open-settings");
@@ -509,61 +509,6 @@
         });
       }
 
-      // Handle Verification (Validate button)
-      if (initValidateBtn) {
-        initValidateBtn.addEventListener("click", () => {
-          const gKey = initGeminiKey.value.trim();
-          const sToken = initSlateToken.value.trim();
-          const sAddr = initSlateAddress.value.trim();
-
-          if (!gKey || !sToken || !sAddr) {
-            if (initError) {
-              initError.textContent = "All fields are required.";
-              initError.classList.remove("hidden");
-            }
-            return;
-          }
-
-          if (initError) {
-            initError.textContent = "Validating...";
-            initError.classList.remove("hidden");
-            initError.className = "text-sm text-muted-foreground"; // Reset color
-          }
-
-          // Temporary connection to test
-          const wsProtocol =
-            window.location.protocol === "https:" ? "wss:" : "ws:";
-          let wsUrl = `${wsProtocol}//${window.location.host}/ws`;
-          const params = new URLSearchParams();
-          params.append("run_id", "validation-check");
-          params.append("gemini_key", gKey);
-          params.append("slate_token", sToken);
-          params.append("slate_address", sAddr);
-          wsUrl += `?${params.toString()}`;
-
-          const testWs = new WebSocket(wsUrl);
-
-          testWs.onopen = () => {
-            if (initError) {
-              initError.textContent =
-                "✅ Connection Successful! You can now Connect.";
-              initError.className = "text-sm text-green-500 font-medium";
-            }
-            testWs.close();
-          };
-
-          testWs.onclose = (event) => {
-            if (event.code !== 1000) {
-              if (initError) {
-                initError.textContent =
-                  "❌ Connection Failed. Check credentials.";
-                initError.className = "text-sm text-destructive";
-              }
-            }
-          };
-        });
-      }
-
       // Settings Modal Logic
       openSettingsBtn.addEventListener("click", () => {
         // Populate run_id input when opening settings
@@ -571,6 +516,14 @@
         if (runIdInput) runIdInput.value = getRunId();
         settingsModal.classList.remove("hidden");
       });
+
+      // Close settings modal
+      const closeSettingsBtn = document.getElementById("close-settings");
+      if (closeSettingsBtn) {
+        closeSettingsBtn.addEventListener("click", () => {
+          settingsModal.classList.add("hidden");
+        });
+      }
 
       // Regenerate Run ID button
       const regenerateRunIdBtn = document.getElementById("regenerate-run-id");
@@ -600,7 +553,6 @@
 
         saveCreds(gKey, sToken, sAddr);
         settingsModal.classList.add("hidden");
-        connect();
       });
 
       clearSettingsBtn.addEventListener("click", () => {
