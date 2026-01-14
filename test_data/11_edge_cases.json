@@ -1,0 +1,12 @@
+[
+    "My password hint is: The year I graduated (2019) plus my first pet's name (Whiskers) equals 2019Whiskers.",
+    "The API key format I use is: PREFIX_<8-random-chars>_SUFFIX, for example PREFIX_a1b2c3d4_SUFFIX.",
+    "My server IP addresses are 192.168.1.100, 192.168.1.101, and 192.168.1.102.",
+    "The SQL query I always forget is: SELECT * FROM users WHERE created_at > NOW() - INTERVAL '7 days';",
+    "Remember this regex pattern for emails: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+    "What's my password hint?",
+    "What format do I use for API keys?",
+    "What are my server IPs?",
+    "What's that SQL query I always forget?",
+    "What's the regex pattern for validating emails?"
+]
