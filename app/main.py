@@ -9,42 +9,14 @@ from fastapi.routing import APIRoute, Mount
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.agents import SLATE_ADDRESS, SLATE_TOKEN, AgentLogger
-from slate_client import CortexClient
+from app.agents import AgentLogger
+
+# from slate_client import CortexClient # Removed startup check dependency
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Verify Slate Connectivity (Flux & RiceDB)
-    print(f"Verifying Slate connectivity at {SLATE_ADDRESS}...")
-    try:
-        client = CortexClient(
-            address=SLATE_ADDRESS, token=SLATE_TOKEN, run_id="startup-check"
-        )
-
-        # 1. Test Working Memory (Flux)
-        print("Testing Working Memory (Flux)... ", end="")
-        try:
-            client.focus("ping")
-            print("OK")
-        except Exception as e:
-            print(f"Failed: {e}")
-            raise e
-
-        # 2. Test Long-Term Memory (RiceDB)
-        print("Testing Long-Term Memory (RiceDB)... ", end="")
-        try:
-            client.reminisce("ping", limit=1)
-            print("OK")
-        except Exception as e:
-            print(f"Failed: {e}")
-            raise e
-
-        print("All Slate services verified.")
-
-    except Exception:
-        print("Stopping server startup due to connectivity failures.")
-        sys.exit(1)
+    # Startup verification removed as credentials are now user-provided at runtime.
 
     # Print endpoints on startup
     print("\nServer endpoints:")
@@ -102,6 +74,16 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str | None = None):
     if not run_id:
         run_id = str(uuid.uuid4())[:8]  # Generate a unique run_id for this session
 
+    # Extract optional config from query params
+    # We can access query params via websocket.query_params
+    # But this function only receives websocket and run_id?
+    # No, FastAPI injects dependencies or we can get query params from websocket object.
+
+    query_params = websocket.query_params
+    gemini_key = query_params.get("gemini_key")
+    slate_token = query_params.get("slate_token")
+    slate_address = query_params.get("slate_address")
+
     # Notify client of the session ID
     await websocket.send_json({"type": "session_info", "run_id": run_id})
 
@@ -112,7 +94,13 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str | None = None):
     # Switched to SingleAgentSystem for testing basic memory functionality
     from app.agents import SingleAgentSystem
 
-    agent_system = SingleAgentSystem(run_id=run_id, logger=logger)
+    agent_system = SingleAgentSystem(
+        run_id=run_id,
+        logger=logger,
+        gemini_key=gemini_key,
+        slate_token=slate_token,
+        slate_address=slate_address,
+    )
 
     try:
         while True:

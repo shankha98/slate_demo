@@ -21,4 +21,6 @@ COPY app ./app
 EXPOSE 8000
 
 # Run the application
+# Use shell form to allow variable expansion if needed, though exec form is preferred.
+# Removed env file dependency, configuration is now runtime or defaults.
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

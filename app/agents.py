@@ -42,17 +42,32 @@ class AgentLogger:
 
 
 class SingleAgentSystem:
-    def __init__(self, run_id: str, logger: AgentLogger):
+    def __init__(
+        self,
+        run_id: str,
+        logger: AgentLogger,
+        gemini_key: str | None = None,
+        slate_token: str | None = None,
+        slate_address: str | None = None,
+    ):
         self.run_id = run_id
         self.logger = logger
 
+        # Configuration Priorities:
+        # 1. Passed arguments (from Frontend/WebSocket)
+        # 2. Environment Variables (from .env)
+
+        self.slate_address = slate_address or SLATE_ADDRESS
+        self.slate_token = slate_token or SLATE_TOKEN
+        self.gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
+
         # Initialize Slate Client
         self.slate = CortexClient(
-            address=SLATE_ADDRESS, token=SLATE_TOKEN, run_id=run_id
+            address=self.slate_address, token=self.slate_token, run_id=run_id
         )
 
         # Initialize Gemini Client
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = self.gemini_key
         vertex_project = os.getenv("GOOGLE_CLOUD_PROJECT")
 
         if vertex_project and os.getenv("GOOGLE_GENAI_USE_VERTEXAI") == "true":

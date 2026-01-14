@@ -35,7 +35,8 @@ async def run_conversation_multisession():
             async with websockets.connect(uri_with_run_id) as websocket:
                 # Wait for session_info
                 session_msg = await websocket.recv()
-                # print(f"DEBUG: {session_msg}")
+                session_data = json.loads(session_msg)
+                print(f"Connected to Session: {session_data.get('run_id')}")
 
                 # Send message
                 await websocket.send(

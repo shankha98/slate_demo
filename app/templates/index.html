@@ -151,11 +151,139 @@
   <body
     class="bg-background text-foreground font-sans h-screen flex overflow-hidden"
   >
+    <!-- Initial Settings Modal (Blocking) -->
+    <div
+      id="initial-settings-modal"
+      class="fixed inset-0 bg-background z-50 flex items-center justify-center"
+    >
+      <div
+        class="bg-card border border-border rounded-lg shadow-lg p-8 w-full max-w-md space-y-6"
+      >
+        <div class="text-center space-y-2">
+          <h1 class="text-2xl font-bold tracking-tight">
+            Welcome to Slate Chat
+          </h1>
+          <p class="text-muted-foreground">Enter your credentials to begin.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Gemini API Key</label>
+            <input
+              type="password"
+              id="init-gemini-key"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="AIza..."
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Slate Token</label>
+            <input
+              type="password"
+              id="init-slate-token"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="Token..."
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Slate Address</label>
+            <input
+              type="text"
+              id="init-slate-address"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="host:port"
+            />
+          </div>
+
+          <div id="init-error" class="text-sm text-destructive hidden"></div>
+
+          <div class="flex gap-2">
+            <button
+              id="init-validate-btn"
+              class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2"
+            >
+              Validate
+            </button>
+            <button
+              id="init-connect-btn"
+              class="flex-1 inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+            >
+              Connect
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-App Settings Modal (Hidden by default) -->
+    <div
+      id="settings-modal"
+      class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-card border border-border rounded-lg shadow-lg p-6 w-full max-w-md"
+      >
+        <h2 class="text-lg font-semibold mb-4">Connection Settings</h2>
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Gemini API Key</label>
+            <input
+              type="password"
+              id="gemini-key"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="AIza..."
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Slate Token</label>
+            <input
+              type="password"
+              id="slate-token"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="Token..."
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Slate Address</label>
+            <input
+              type="text"
+              id="slate-address"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              placeholder="host:port"
+            />
+          </div>
+          <div class="flex justify-end gap-2 mt-6">
+            <button
+              id="clear-settings"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
+            >
+              Clear
+            </button>
+            <button
+              id="save-settings"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+            >
+              Connect & Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Left Panel: Chat -->
     <div class="w-1/2 flex flex-col border-r border-border bg-card">
       <div class="p-6 border-b border-border flex items-center justify-between">
         <div>
           <h1 class="text-xl font-semibold tracking-tight">Slate Chat</h1>
+          <div class="flex items-center gap-2">
+            <p class="text-sm text-muted-foreground">Multi-Agent System</p>
+            <button
+              id="open-settings"
+              class="text-xs text-muted-foreground hover:text-foreground"
+            >
+              ⚙️ Settings
+            </button>
+          </div>
           <div
             class="flex items-center gap-2 text-sm text-muted-foreground mt-1"
           >
@@ -249,19 +377,188 @@
       const connectBtn = document.getElementById("connect-btn");
       const statusIndicator = document.getElementById("status-indicator");
 
+      // Elements
+      const initialModal = document.getElementById("initial-settings-modal");
+      const initConnectBtn = document.getElementById("init-connect-btn");
+      const initValidateBtn = document.getElementById("init-validate-btn");
+      const initError = document.getElementById("init-error");
+      const settingsModal = document.getElementById("settings-modal");
+      const openSettingsBtn = document.getElementById("open-settings");
+      const saveSettingsBtn = document.getElementById("save-settings");
+      const clearSettingsBtn = document.getElementById("clear-settings");
+
+      // Inputs
+      const initGeminiKey = document.getElementById("init-gemini-key");
+      const initSlateToken = document.getElementById("init-slate-token");
+      const initSlateAddress = document.getElementById("init-slate-address");
+      const geminiKeyInput = document.getElementById("gemini-key");
+      const slateTokenInput = document.getElementById("slate-token");
+      const slateAddressInput = document.getElementById("slate-address");
+
       let ws;
+
+      function getStoredCreds() {
+        return {
+          geminiKey: localStorage.getItem("gemini_api_key"),
+          slateToken: localStorage.getItem("slate_token"),
+          slateAddress: localStorage.getItem("slate_address"),
+        };
+      }
+
+      function saveCreds(geminiKey, slateToken, slateAddress) {
+        localStorage.setItem("gemini_api_key", geminiKey);
+        localStorage.setItem("slate_token", slateToken);
+        localStorage.setItem("slate_address", slateAddress);
+
+        // Sync inputs
+        geminiKeyInput.value = geminiKey;
+        slateTokenInput.value = slateToken;
+        slateAddressInput.value = slateAddress;
+        initGeminiKey.value = geminiKey;
+        initSlateToken.value = slateToken;
+        initSlateAddress.value = slateAddress;
+      }
+
+      function checkCreds() {
+        const creds = getStoredCreds();
+        if (creds.geminiKey && creds.slateToken && creds.slateAddress) {
+          initialModal.classList.add("hidden");
+          geminiKeyInput.value = creds.geminiKey;
+          slateTokenInput.value = creds.slateToken;
+          slateAddressInput.value = creds.slateAddress;
+          return true;
+        } else {
+          initialModal.classList.remove("hidden");
+          return false;
+        }
+      }
+
+      // Initial Flow
+      if (checkCreds()) {
+        connect();
+      }
+
+      // Handle Initial Connect
+      if (initConnectBtn) {
+        initConnectBtn.addEventListener("click", () => {
+          const gKey = initGeminiKey.value.trim();
+          const sToken = initSlateToken.value.trim();
+          const sAddr = initSlateAddress.value.trim();
+
+          if (!gKey || !sToken || !sAddr) {
+            if (initError) {
+              initError.textContent = "All fields are required.";
+              initError.classList.remove("hidden");
+            }
+            return;
+          }
+
+          saveCreds(gKey, sToken, sAddr);
+          if (initialModal) initialModal.classList.add("hidden");
+          connect();
+        });
+      }
+
+      // Handle Verification (Validate button)
+      if (initValidateBtn) {
+        initValidateBtn.addEventListener("click", () => {
+          const gKey = initGeminiKey.value.trim();
+          const sToken = initSlateToken.value.trim();
+          const sAddr = initSlateAddress.value.trim();
+
+          if (!gKey || !sToken || !sAddr) {
+            if (initError) {
+              initError.textContent = "All fields are required.";
+              initError.classList.remove("hidden");
+            }
+            return;
+          }
+
+          if (initError) {
+            initError.textContent = "Validating...";
+            initError.classList.remove("hidden");
+            initError.className = "text-sm text-muted-foreground"; // Reset color
+          }
+
+          // Temporary connection to test
+          const wsProtocol =
+            window.location.protocol === "https:" ? "wss:" : "ws:";
+          let wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+          const params = new URLSearchParams();
+          params.append("run_id", "validation-check");
+          params.append("gemini_key", gKey);
+          params.append("slate_token", sToken);
+          params.append("slate_address", sAddr);
+          wsUrl += `?${params.toString()}`;
+
+          const testWs = new WebSocket(wsUrl);
+
+          testWs.onopen = () => {
+            if (initError) {
+              initError.textContent =
+                "✅ Connection Successful! You can now Connect.";
+              initError.className = "text-sm text-green-500 font-medium";
+            }
+            testWs.close();
+          };
+
+          testWs.onclose = (event) => {
+            if (event.code !== 1000) {
+              if (initError) {
+                initError.textContent =
+                  "❌ Connection Failed. Check credentials.";
+                initError.className = "text-sm text-destructive";
+              }
+            }
+          };
+        });
+      }
+
+      // Settings Modal Logic
+      openSettingsBtn.addEventListener("click", () =>
+        settingsModal.classList.remove("hidden")
+      );
+
+      saveSettingsBtn.addEventListener("click", () => {
+        const gKey = geminiKeyInput.value.trim();
+        const sToken = slateTokenInput.value.trim();
+        const sAddr = slateAddressInput.value.trim();
+
+        if (!gKey || !sToken || !sAddr) {
+          alert("All fields are required.");
+          return;
+        }
+
+        saveCreds(gKey, sToken, sAddr);
+        settingsModal.classList.add("hidden");
+        connect();
+      });
+
+      clearSettingsBtn.addEventListener("click", () => {
+        localStorage.clear();
+        location.reload(); // Reload to show initial modal
+      });
 
       function connect(runId = null) {
         if (ws) {
           ws.close();
         }
 
+        const creds = getStoredCreds();
+        if (!creds.geminiKey) return; // Should be handled by modal logic
+
         const wsProtocol =
           window.location.protocol === "https:" ? "wss:" : "ws:";
         let wsUrl = `${wsProtocol}//${window.location.host}/ws`;
-        if (runId) {
-          wsUrl += `?run_id=${runId}`;
-        }
+
+        // Append query params
+        const params = new URLSearchParams();
+        if (runId) params.append("run_id", runId);
+        params.append("gemini_key", creds.geminiKey);
+        params.append("slate_token", creds.slateToken);
+        params.append("slate_address", creds.slateAddress);
+
+        wsUrl += `?${params.toString()}`;
 
         ws = new WebSocket(wsUrl);
 
@@ -271,9 +568,17 @@
           statusIndicator.title = "Connected";
         };
 
-        ws.onclose = () => {
+        ws.onclose = (event) => {
           statusIndicator.className = "h-2 w-2 rounded-full bg-red-500";
           statusIndicator.title = "Disconnected";
+          if (event.code !== 1000) {
+            // Normal closure
+            addLog({
+              agent: "System",
+              type: "error",
+              content: "Connection failed. Check settings.",
+            });
+          }
         };
 
         ws.onmessage = (event) => {
@@ -293,9 +598,6 @@
           }
         };
       }
-
-      // Initial connection
-      connect();
 
       connectBtn.addEventListener("click", () => {
         const runId = sessionInput.value.trim();
@@ -344,6 +646,7 @@
         if (data.agent === "Manager") agentColor = "text-purple-400";
         if (data.agent === "Specialist") agentColor = "text-orange-400";
         if (data.agent === "System") agentColor = "text-zinc-500";
+        if (data.agent === "Assistant") agentColor = "text-green-400";
 
         div.innerHTML = `
             <div class="flex items-center gap-2 mb-1">
@@ -366,10 +669,10 @@
       function escapeHtml(text) {
         if (!text) return "";
         const map = {
-          "&": "&",
-          "<": "<",
-          ">": ">",
-          '"': '"',
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
           "'": "&#039;",
         };
         return text.replace(/[&<>"']/g, function (m) {
