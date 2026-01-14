@@ -35,3 +35,7 @@ build:
 docker-run:
 	clear
 	docker run -p 8000:8000 slate-demo
+
+cloud_run_deploy:
+	clear
+	gcloud beta builds submit --config cloudbuild.yaml .

@@ -1,0 +1,33 @@
+steps:
+  - id: "Build Container Image"
+    name: "gcr.io/cloud-builders/docker:latest"
+    args: ["build", "-f", "Dockerfile", "-t", "gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID", "."]
+
+  - id: "Push Container Image"
+    name: "gcr.io/cloud-builders/docker:latest"
+    args: ["push", "gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID"]
+
+  - id: "Deploy to Cloud Run"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    entrypoint: /bin/bash
+    args:
+      - "-c"
+      - |
+        gcloud run deploy $_SERVICE_NAME \
+          --image gcr.io/$PROJECT_ID/$_SERVICE_NAME:$BUILD_ID \
+          --region $_REGION \
+          --platform managed \
+          --allow-unauthenticated \
+          --port 8000 \
+          --cpu 1 \
+          --memory 512Mi \
+          --min-instances 0 \
+          --max-instances 10 \
+          --execution-environment gen2
+
+substitutions:
+  _SERVICE_NAME: rice-slate-demo
+  _REGION: europe-west1
+
+options:
+  logging: CLOUD_LOGGING_ONLY
