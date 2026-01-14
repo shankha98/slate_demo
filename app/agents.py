@@ -26,10 +26,6 @@ class AgentLogger:
     async def log(
         self, agent_name: str, event_type: str, content: str, details: Any = None
     ):
-        """
-        event_type: 'activation', 'thinking', 'tool_call', 'tool_result',
-                    'slate_call', 'output', 'input'
-        """
         data = {
             "agent": agent_name,
             "type": event_type,
@@ -45,7 +41,7 @@ class AgentLogger:
             print(f"AgentLogger Error: {e}")
 
 
-class MultiAgentSystem:
+class SingleAgentSystem:
     def __init__(self, run_id: str, logger: AgentLogger):
         self.run_id = run_id
         self.logger = logger
@@ -77,228 +73,82 @@ class MultiAgentSystem:
             # 1. User Input
             await self.logger.log("System", "input", f"User: {user_message}")
 
-            # 2. Commit User Input to Echoes
-            start = time.time()
-            await self._slate_call(
-                self.slate.commit, input=user_message, outcome="", agent_id="user"
-            )
-            duration = (time.time() - start) * 1000
-            await self.logger.log(
-                "System",
-                "slate_call",
-                f"Committing user input to Echoes (Memory) ({duration:.2f}ms)",
-            )
-
-            # Define Tools Wrapper (Note: These must be synchronous for Gemini SDK, but we wrap the calls internally if possible?
-            # NO, Gemini SDK tool calls are synchronous in the loop I wrote.
-            # I call `tools_map[fn_name](...)`.
-            # I need to make my tool implementations use async?
-            # But `_run_agent_loop` calls them synchronously: `result = tools_map[fn_name](**args_dict)`.
-            # So I should make `_run_agent_loop` await them if they are coroutines.
-            # Or I keep them synchronous but use `run_in_executor` INSIDE them?
-            # `run_in_executor` is async (awaitable). I cannot await inside a sync function.
-            # So I must make tools Async.
-            # And `_run_agent_loop` must await them.
-            # Let's do that.
-
-            async def remember(content: str) -> str:
+            # Define Tools Wrapper
+            async def remember_fact(fact: str, topic: str) -> str:
                 """
-                Stores a piece of information in working memory (Flux).
-                Use this to keep track of important details, context,
-                or to DELEGATE tasks to the Specialist.
-                If delegating, start content with "DELEGATE:".
+                Stores a specific fact or piece of information into long-term memory.
+                Use this when the user tells you something new that you should remember.
                 """
                 try:
                     t_start = time.time()
-                    resp = await self._slate_call(self.slate.focus, content)
-                    t_dur = (time.time() - t_start) * 1000
-                    return f"Stored. ID: {resp.id} ({t_dur:.2f}ms)"
-                except Exception as e:
-                    return f"Error: {e}"
-
-            async def recall_context() -> str:
-                """
-                Retrieves the current working memory (Flux) sorted by relevance.
-                Call this to see what you were working on or to get context.
-                """
-                try:
-                    t_start = time.time()
-                    resp = await self._slate_call(self.slate.drift)
-                    t_dur = (time.time() - t_start) * 1000
-                    if not hasattr(resp, "items") or not resp.items:
-                        return f"Memory is empty. ({t_dur:.2f}ms)"
-                    items = [
-                        f"- {item.content} ({item.relevance:.2f})"
-                        for item in resp.items
-                    ]
-                    return "\n".join(items) + f"\n(Latency: {t_dur:.2f}ms)"
-                except Exception as e:
-                    return f"Error: {e}"
-
-            async def save_experience(action: str, outcome: str) -> str:
-                """
-                Saves an interaction to long-term memory (Echoes).
-                Use this after completing a significant step or action.
-                """
-                try:
-                    t_start = time.time()
+                    # We map this to Slate's 'commit' (Echoes)
                     await self._slate_call(
                         self.slate.commit,
-                        input=action,
-                        outcome=outcome,
-                        action=action,
-                        agent_id="specialist",
+                        input=topic,  # We use topic as input key
+                        outcome=fact,
+                        action="remember_fact",
+                        agent_id="assistant",
                     )
                     t_dur = (time.time() - t_start) * 1000
-                    return f"Experience saved. ({t_dur:.2f}ms)"
+                    return f"Fact remembered: '{fact}' ({t_dur:.2f}ms)"
                 except Exception as e:
-                    return f"Error: {e}"
+                    return f"Error remembering fact: {e}"
 
-            async def search_history(query: str) -> str:
+            async def recall_facts(topic: str) -> str:
                 """
-                Searches long-term memory (Echoes) for past similar experiences.
-                Use this before acting to see if we've done this before.
+                Searches long-term memory for facts related to a specific topic.
+                Use this when you need to answer a question based on past conversations.
                 """
                 try:
                     t_start = time.time()
-                    resp = await self._slate_call(self.slate.reminisce, query, limit=10)
+                    # We map this to Slate's 'reminisce'
+                    resp = await self._slate_call(self.slate.reminisce, topic, limit=5)
                     t_dur = (time.time() - t_start) * 1000
+
                     if not hasattr(resp, "traces") or not resp.traces:
-                        return f"No relevant past experiences found. ({t_dur:.2f}ms)"
-                    traces = [
-                        f"- Action: {t.action} | Outcome: {t.outcome}"
-                        for t in resp.traces
-                    ]
-                    return "\n".join(traces) + f"\n(Latency: {t_dur:.2f}ms)"
+                        return (
+                            f"No relevant facts found about '{topic}'. ({t_dur:.2f}ms)"
+                        )
+
+                    facts = [f"- {t.outcome}" for t in resp.traces]
+                    return "\n".join(facts) + f"\n(Latency: {t_dur:.2f}ms)"
                 except Exception as e:
-                    return f"Error: {e}"
+                    return f"Error recalling facts: {e}"
 
-            # --- Phase 1: Manager Agent ---
-            await self.logger.log("Manager", "activation", "Manager agent active")
+            # Agent Execution
+            await self.logger.log("Assistant", "activation", "Assistant active")
 
-            manager_tools = [remember, search_history, save_experience]
-            manager_sys_instruct = """
-You are the Manager Agent.
-Your goal is to handle the user's request.
-1. Search history (`search_history`) to see if we've handled similar requests.
-2. If user provides facts (e.g. name), use `save_experience` to store them.
-3. If simple, Answer directly.
-4. If complex, DELEGATE to the Specialist by using `remember`
-   with "DELEGATE: <task details>".
-Do NOT execute complex tasks yourself.
+            tools = [remember_fact, recall_facts]
+            system_instruction = """
+You are a helpful AI assistant with long-term memory powered by Slate.
+- When the user tells you something, use `remember_fact` to store it.
+- When the user asks a question, use `recall_facts` to search your memory first.
+- Always check memory before saying you don't know.
 """
 
-            # Initial prompt
-            chat_history = []  # noqa: F841
-
-            # Run Manager Loop
-            # We use a manual loop to handle tool calls and delegation detection
-            manager_response = await self._run_agent_loop(
-                agent_name="Manager",
+            # Run Agent Loop
+            response = await self._run_agent_loop(
+                agent_name="Assistant",
                 model=GEMINI_MODEL,
-                system_instruction=manager_sys_instruct,
-                tools=manager_tools,
+                system_instruction=system_instruction,
+                tools=tools,
                 prompt=user_message,
                 tools_map={
-                    "remember": remember,
-                    "search_history": search_history,
-                    "save_experience": save_experience,
+                    "remember_fact": remember_fact,
+                    "recall_facts": recall_facts,
                 },
             )
 
-            # Check if delegation happened
-            # We check if "DELEGATE:" string appears in Flux (via drift).
-            # Simpler: check if `remember` was called with DELEGATE during the loop.
-            # But `_run_agent_loop` returns the final text.
-            # Let's check the context (Flux) to see if there is a pending task.
-
-            # Read Flux to see if there is a DELEGATE task
-            start_drift = time.time()
-            drift_resp = await self._slate_call(self.slate.drift)
-            dur_drift = (time.time() - start_drift) * 1000
-            await self.logger.log(
-                "System",
-                "slate_call",
-                f"Checking for delegation in Flux ({dur_drift:.2f}ms)",
-            )
-
-            delegated_task = None
-            if hasattr(drift_resp, "items"):
-                completed_tasks = set()
-                for item in drift_resp.items:
-                    if item.content.startswith("Task Completed: "):
-                        completed_tasks.add(
-                            item.content.replace("Task Completed: ", "")
-                        )
-
-                for item in drift_resp.items:
-                    if item.content.startswith("DELEGATE:"):
-                        if item.content not in completed_tasks:
-                            delegated_task = item.content
-                            break
-
-            if delegated_task:
-                await self.logger.log(
-                    "Manager", "output", f"Delegating task: {delegated_task}"
-                )
-
-                # --- Phase 2: Specialist Agent ---
-                await self.logger.log(
-                    "Specialist", "activation", "Specialist agent active"
-                )
-
-                specialist_tools = [recall_context, save_experience, search_history]
-                specialist_sys_instruct = """
-You are the Specialist Agent.
-1. Start by calling `recall_context` to see the delegated task (look for "DELEGATE:").
-2. Execute the task.
-3. Save your result using `save_experience`.
-4. Return the final answer to the user.
-"""
-
-                specialist_response = await self._run_agent_loop(
-                    agent_name="Specialist",
-                    model=GEMINI_MODEL,
-                    system_instruction=specialist_sys_instruct,
-                    tools=specialist_tools,
-                    prompt="The Manager has delegated a task to you. "
-                    "Check context and execute.",
-                    tools_map={
-                        "recall_context": recall_context,
-                        "save_experience": save_experience,
-                        "search_history": search_history,
-                    },
-                )
-
-                # Mark task as done in Flux to prevent re-execution in future turns
-                await self._slate_call(
-                    self.slate.focus, f"Task Completed: {delegated_task}"
-                )
-
-                return specialist_response
-            else:
-                return manager_response
+            return response
 
         except Exception as e:
             error_msg = str(e)
-            if (
-                "Connection refused" in error_msg
-                or "StatusCode.UNAVAILABLE" in error_msg
-            ):
-                error_msg = (
-                    f"Could not connect to Slate server at {SLATE_ADDRESS}. "
-                    "Please ensure the server is running and accessible."
-                )
-
             await self.logger.log("System", "error", error_msg)
             return f"Error: {error_msg}"
 
     async def _run_agent_loop(
         self, agent_name, model, system_instruction, tools, prompt, tools_map
     ):
-        """
-        Executes the Gemini model with manual tool handling loop.
-        """
         config = types.GenerateContentConfig(
             tools=tools,
             system_instruction=system_instruction,
@@ -308,36 +158,24 @@ You are the Specialist Agent.
         )
 
         chat = self.genai_client.chats.create(model=model, config=config)
-
-        # Initial message
         await self.logger.log(agent_name, "thinking", "Processing...")
 
-        # We need to handle the turn loop manually
-        # Send message
         response = chat.send_message(prompt)
-
         max_turns = 10
         current_turn = 0
 
         while current_turn < max_turns:
             current_turn += 1
-
-            # Check for function calls
             if response.function_calls:
                 for func_call in response.function_calls:
                     fn_name = func_call.name or "unknown"
                     fn_args = func_call.args
-
                     await self.logger.log(
                         agent_name, "tool_call", f"{fn_name}({fn_args})"
                     )
-
-                    # Execute tool
                     if fn_name in tools_map:
                         try:
-                            # Convert args to dict
                             args_dict = {k: v for k, v in fn_args.items()}  # ty:ignore[possibly-missing-attribute]
-                            # Check if tool is async
                             tool_func = tools_map[fn_name]
                             if inspect.iscoroutinefunction(tool_func):
                                 result = await tool_func(**args_dict)
@@ -347,25 +185,16 @@ You are the Specialist Agent.
                             result = f"Error executing tool: {e}"
                     else:
                         result = f"Error: Tool {fn_name} not found."
-
                     await self.logger.log(agent_name, "tool_result", str(result))
-
-                    # Feed result back to model
-                    # Using the function response part
                     func_resp_part = types.Part.from_function_response(
                         name=fn_name, response={"result": result}
                     )
-
-                    # Send tool response
                     response = chat.send_message([func_resp_part])
             else:
-                # Text response
                 text_content = response.text
                 if text_content:
                     await self.logger.log(agent_name, "output", text_content)
                     return text_content
                 else:
-                    # Empty response?
                     return "No response generated."
-
         return "Max turns reached."

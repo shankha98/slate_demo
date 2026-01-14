@@ -9,7 +9,7 @@ from fastapi.routing import APIRoute, Mount
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.agents import SLATE_ADDRESS, SLATE_TOKEN, AgentLogger, MultiAgentSystem
+from app.agents import SLATE_ADDRESS, SLATE_TOKEN, AgentLogger
 from slate_client import CortexClient
 
 
@@ -109,7 +109,10 @@ async def websocket_endpoint(websocket: WebSocket, run_id: str | None = None):
         await websocket.send_json(data)
 
     logger = AgentLogger(log_callback)
-    agent_system = MultiAgentSystem(run_id=run_id, logger=logger)
+    # Switched to SingleAgentSystem for testing basic memory functionality
+    from app.agents import SingleAgentSystem
+
+    agent_system = SingleAgentSystem(run_id=run_id, logger=logger)
 
     try:
         while True:
