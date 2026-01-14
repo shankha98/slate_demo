@@ -188,6 +188,7 @@ You are a helpful AI assistant with long-term memory powered by Slate.
                     await self.logger.log(
                         agent_name, "tool_call", f"{fn_name}({fn_args})"
                     )
+                    tool_start = time.time()
                     if fn_name in tools_map:
                         try:
                             args_dict = {k: v for k, v in fn_args.items()}  # ty:ignore[possibly-missing-attribute]
@@ -200,7 +201,16 @@ You are a helpful AI assistant with long-term memory powered by Slate.
                             result = f"Error executing tool: {e}"
                     else:
                         result = f"Error: Tool {fn_name} not found."
-                    await self.logger.log(agent_name, "tool_result", str(result))
+                    tool_latency_ms = (time.time() - tool_start) * 1000
+                    await self.logger.log(
+                        agent_name,
+                        "tool_result",
+                        str(result),
+                        details={
+                            "latency_ms": round(tool_latency_ms, 2),
+                            "tool": fn_name,
+                        },
+                    )
                     func_resp_part = types.Part.from_function_response(
                         name=fn_name, response={"result": result}
                     )

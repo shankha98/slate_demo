@@ -713,13 +713,35 @@
         if (data.agent === "System") agentColor = "text-zinc-500";
         if (data.agent === "Assistant") agentColor = "text-green-400";
 
+        // Latency badge for tool results
+        let latencyBadge = "";
+        if (data.details && data.details.latency_ms !== undefined) {
+          const latency = data.details.latency_ms;
+          let latencyColor = "bg-green-900 text-green-300"; // fast < 100ms
+          if (latency >= 500) {
+            latencyColor = "bg-red-900 text-red-300"; // slow >= 500ms
+          } else if (latency >= 100) {
+            latencyColor = "bg-yellow-900 text-yellow-300"; // medium 100-500ms
+          }
+          latencyBadge = `<span class="${latencyColor} text-[10px] px-1.5 py-0.5 rounded font-mono ml-1">${latency.toFixed(
+            2
+          )}ms</span>`;
+        }
+
+        // Tool name badge
+        let toolBadge = "";
+        if (data.details && data.details.tool) {
+          toolBadge = `<span class="bg-zinc-800 text-zinc-300 text-[10px] px-1.5 py-0.5 rounded font-mono ml-1">${data.details.tool}</span>`;
+        }
+
         div.innerHTML = `
-            <div class="flex items-center gap-2 mb-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
               <span class="text-zinc-500 text-[10px]">${time}</span>
               <span class="font-bold ${agentColor}">${data.agent}</span>
               <span class="text-zinc-400 text-[10px] uppercase tracking-wider bg-zinc-900 px-1 rounded">${
                 data.type
               }</span>
+              ${toolBadge}${latencyBadge}
             </div>
             <div class="text-zinc-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(
               data.content
