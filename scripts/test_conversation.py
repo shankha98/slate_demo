@@ -41,7 +41,7 @@ async def run_conversation():
                             break
                         elif response.get("agent"):
                             # It's a log message
-                            # print(f"  [{response['agent']}] {response['type']}: {response['content'][:50]}...")
+                            # print(f"  [{response['agent']}] {response['type']}: {response['content'][:50]}...")  # noqa: E501
                             pass  # suppress logs for cleaner output
 
                     except websockets.exceptions.ConnectionClosed:
