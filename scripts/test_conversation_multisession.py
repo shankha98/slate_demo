@@ -9,15 +9,16 @@ import websockets
 async def run_conversation_multisession():
     uri = "ws://localhost:8000/ws"
 
-    # Generate a consistent run_id to simulate the same Slate memory context across different chat sessions
+    # run_id: persistent Slate memory context (same across all sessions)
+    # session_id: unique per WebSocket connection (simulating page reloads)
     run_id = f"test-multisession-{uuid.uuid4().hex[:8]}"
-    uri_with_run_id = f"{uri}?run_id={run_id}"
 
     print("Starting Multi-Session Persistence Test")
-    print(f"Shared Run ID: {run_id}")
+    print(f"Shared Run ID (Slate Memory): {run_id}")
     print(
-        "Each turn will be a NEW WebSocket connection (simulating a new chat session)."
+        "Each turn will be a NEW WebSocket connection with a NEW session_id (simulating page reloads)."
     )
+    print("The run_id stays the same to test memory persistence.")
 
     try:
         with open("sample_conversation.json", "r") as f:
@@ -31,12 +32,18 @@ async def run_conversation_multisession():
             print(f"\n--- Turn {i} (New Connection) ---")
             print(f"User: {user_msg}")
 
+            # Generate a unique session_id for each connection (simulates page reload)
+            session_id = f"session-{uuid.uuid4().hex[:8]}"
+            uri_with_params = f"{uri}?run_id={run_id}&session_id={session_id}"
+
             # Connect for THIS turn only
-            async with websockets.connect(uri_with_run_id) as websocket:
+            async with websockets.connect(uri_with_params) as websocket:
                 # Wait for session_info
                 session_msg = await websocket.recv()
                 session_data = json.loads(session_msg)
-                print(f"Connected to Session: {session_data.get('run_id')}")
+                print(
+                    f"Session: {session_data.get('session_id')} | Memory: {session_data.get('run_id')}"
+                )
 
                 # Send message
                 await websocket.send(

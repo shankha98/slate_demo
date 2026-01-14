@@ -69,23 +69,28 @@ manager = ConnectionManager()
 
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, run_id: str | None = None):
+async def websocket_endpoint(
+    websocket: WebSocket, run_id: str | None = None, session_id: str | None = None
+):
     await manager.connect(websocket)
+
+    # run_id is for Slate memory persistence (long-term)
+    # session_id is for this chat session (short-term, regenerated on page reload)
     if not run_id:
-        run_id = str(uuid.uuid4())[:8]  # Generate a unique run_id for this session
+        run_id = str(uuid.uuid4())[:8]  # Generate a unique run_id for Slate memory
+    if not session_id:
+        session_id = str(uuid.uuid4())[:8]  # Generate a unique session_id for this chat
 
     # Extract optional config from query params
-    # We can access query params via websocket.query_params
-    # But this function only receives websocket and run_id?
-    # No, FastAPI injects dependencies or we can get query params from websocket object.
-
     query_params = websocket.query_params
     gemini_key = query_params.get("gemini_key")
     slate_token = query_params.get("slate_token")
     slate_address = query_params.get("slate_address")
 
-    # Notify client of the session ID
-    await websocket.send_json({"type": "session_info", "run_id": run_id})
+    # Notify client of both IDs
+    await websocket.send_json(
+        {"type": "session_info", "run_id": run_id, "session_id": session_id}
+    )
 
     async def log_callback(data: dict):
         await websocket.send_json(data)

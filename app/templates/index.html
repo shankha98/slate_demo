@@ -252,12 +252,35 @@
               placeholder="host:port"
             />
           </div>
+          <div class="border-t border-border pt-4 mt-4">
+            <label class="text-sm font-medium">Slate Memory ID (run_id)</label>
+            <p class="text-xs text-muted-foreground mb-2">
+              This ID persists your Slate memory across sessions. Clear to start
+              fresh.
+            </p>
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                id="run-id-input"
+                class="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Auto-generated"
+                readonly
+              />
+              <button
+                id="regenerate-run-id"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-3 py-2"
+                title="Generate new Memory ID"
+              >
+                🔄
+              </button>
+            </div>
+          </div>
           <div class="flex justify-end gap-2 mt-6">
             <button
               id="clear-settings"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
             >
-              Clear
+              Clear All
             </button>
             <button
               id="save-settings"
@@ -284,21 +307,23 @@
               ⚙️ Settings
             </button>
           </div>
-          <div
-            class="flex items-center gap-2 text-sm text-muted-foreground mt-1"
-          >
-            <span>Session:</span>
-            <input
-              id="session-id-input"
-              class="bg-transparent border-b border-zinc-300 focus:outline-none w-32 text-xs font-mono text-foreground placeholder:text-muted-foreground"
-              placeholder="Auto-generated"
-            />
-            <button
-              id="connect-btn"
-              class="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded hover:bg-secondary/80"
-            >
-              Set
-            </button>
+          <div class="flex flex-col gap-1 text-sm text-muted-foreground mt-1">
+            <div class="flex items-center gap-2">
+              <span class="w-16">Session:</span>
+              <span
+                id="session-id-display"
+                class="text-xs font-mono text-foreground"
+                >-</span
+              >
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-16">Memory:</span>
+              <span
+                id="run-id-display"
+                class="text-xs font-mono text-foreground"
+                >-</span
+              >
+            </div>
           </div>
         </div>
         <div
@@ -373,8 +398,8 @@
       const logs = document.getElementById("logs");
       const messageInput = document.getElementById("message-input");
       const sendBtn = document.getElementById("send-btn");
-      const sessionInput = document.getElementById("session-id-input");
-      const connectBtn = document.getElementById("connect-btn");
+      const sessionIdDisplay = document.getElementById("session-id-display");
+      const runIdDisplay = document.getElementById("run-id-display");
       const statusIndicator = document.getElementById("status-indicator");
 
       // Elements
@@ -397,11 +422,36 @@
 
       let ws;
 
+      // Generate a unique ID (8-char hex)
+      function generateId() {
+        return Math.random().toString(16).substring(2, 10);
+      }
+
+      // Session ID: regenerated on each page load (chat session)
+      let currentSessionId = generateId();
+
+      // Run ID: persistent in localStorage (Slate memory context)
+      function getRunId() {
+        let runId = localStorage.getItem("slate_run_id");
+        if (!runId) {
+          runId = generateId();
+          localStorage.setItem("slate_run_id", runId);
+        }
+        return runId;
+      }
+
+      function regenerateRunId() {
+        const newRunId = generateId();
+        localStorage.setItem("slate_run_id", newRunId);
+        return newRunId;
+      }
+
       function getStoredCreds() {
         return {
           geminiKey: localStorage.getItem("gemini_api_key"),
           slateToken: localStorage.getItem("slate_token"),
           slateAddress: localStorage.getItem("slate_address"),
+          runId: getRunId(),
         };
       }
 
@@ -515,9 +565,28 @@
       }
 
       // Settings Modal Logic
-      openSettingsBtn.addEventListener("click", () =>
-        settingsModal.classList.remove("hidden")
-      );
+      openSettingsBtn.addEventListener("click", () => {
+        // Populate run_id input when opening settings
+        const runIdInput = document.getElementById("run-id-input");
+        if (runIdInput) runIdInput.value = getRunId();
+        settingsModal.classList.remove("hidden");
+      });
+
+      // Regenerate Run ID button
+      const regenerateRunIdBtn = document.getElementById("regenerate-run-id");
+      if (regenerateRunIdBtn) {
+        regenerateRunIdBtn.addEventListener("click", () => {
+          const newRunId = regenerateRunId();
+          const runIdInput = document.getElementById("run-id-input");
+          if (runIdInput) runIdInput.value = newRunId;
+          runIdDisplay.textContent = newRunId;
+          addLog({
+            agent: "System",
+            type: "info",
+            content: `Memory ID regenerated: ${newRunId}. Reconnect to use new memory.`,
+          });
+        });
+      }
 
       saveSettingsBtn.addEventListener("click", () => {
         const gKey = geminiKeyInput.value.trim();
@@ -539,7 +608,7 @@
         location.reload(); // Reload to show initial modal
       });
 
-      function connect(runId = null) {
+      function connect() {
         if (ws) {
           ws.close();
         }
@@ -547,13 +616,17 @@
         const creds = getStoredCreds();
         if (!creds.geminiKey) return; // Should be handled by modal logic
 
+        // Generate a new session_id for this chat session
+        currentSessionId = generateId();
+
         const wsProtocol =
           window.location.protocol === "https:" ? "wss:" : "ws:";
         let wsUrl = `${wsProtocol}//${window.location.host}/ws`;
 
         // Append query params
         const params = new URLSearchParams();
-        if (runId) params.append("run_id", runId);
+        params.append("run_id", creds.runId); // Persistent Slate memory ID
+        params.append("session_id", currentSessionId); // New chat session ID
         params.append("gemini_key", creds.geminiKey);
         params.append("slate_token", creds.slateToken);
         params.append("slate_address", creds.slateAddress);
@@ -587,29 +660,21 @@
           if (data.type === "final_response") {
             addMessage("bot", data.content);
           } else if (data.type === "session_info") {
-            sessionInput.value = data.run_id;
+            sessionIdDisplay.textContent = data.session_id;
+            runIdDisplay.textContent = data.run_id;
+            // Update the settings modal run_id input
+            const runIdInput = document.getElementById("run-id-input");
+            if (runIdInput) runIdInput.value = data.run_id;
             addLog({
               agent: "System",
               type: "info",
-              content: `Connected to session: ${data.run_id}`,
+              content: `Chat Session: ${data.session_id} | Memory ID: ${data.run_id}`,
             });
           } else if (data.agent) {
             addLog(data);
           }
         };
       }
-
-      connectBtn.addEventListener("click", () => {
-        const runId = sessionInput.value.trim();
-        if (runId) {
-          // Clear logs and chat? Maybe keep logs to show transition.
-          // But logic says "in them while chatting ... existing user data is used".
-          // So we switch context.
-          chatHistory.innerHTML = "";
-          logs.innerHTML = "";
-          connect(runId);
-        }
-      });
 
       function addMessage(sender, text) {
         const div = document.createElement("div");
