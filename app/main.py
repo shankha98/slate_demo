@@ -97,9 +97,13 @@ manager = ConnectionManager()
 
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, run_id: str | None = None):
     await manager.connect(websocket)
-    run_id = str(uuid.uuid4())[:8]  # Generate a unique run_id for this session
+    if not run_id:
+        run_id = str(uuid.uuid4())[:8]  # Generate a unique run_id for this session
+
+    # Notify client of the session ID
+    await websocket.send_json({"type": "session_info", "run_id": run_id})
 
     async def log_callback(data: dict):
         await websocket.send_json(data)

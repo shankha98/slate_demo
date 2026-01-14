@@ -156,11 +156,27 @@
       <div class="p-6 border-b border-border flex items-center justify-between">
         <div>
           <h1 class="text-xl font-semibold tracking-tight">Slate Chat</h1>
-          <p class="text-sm text-muted-foreground">Multi-Agent System</p>
+          <div
+            class="flex items-center gap-2 text-sm text-muted-foreground mt-1"
+          >
+            <span>Session:</span>
+            <input
+              id="session-id-input"
+              class="bg-transparent border-b border-zinc-300 focus:outline-none w-32 text-xs font-mono text-foreground placeholder:text-muted-foreground"
+              placeholder="Auto-generated"
+            />
+            <button
+              id="connect-btn"
+              class="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded hover:bg-secondary/80"
+            >
+              Set
+            </button>
+          </div>
         </div>
         <div
-          class="h-2 w-2 rounded-full bg-green-500 animate-pulse"
-          title="Connected"
+          id="status-indicator"
+          class="h-2 w-2 rounded-full bg-yellow-500"
+          title="Connecting..."
         ></div>
       </div>
 
@@ -229,20 +245,69 @@
       const logs = document.getElementById("logs");
       const messageInput = document.getElementById("message-input");
       const sendBtn = document.getElementById("send-btn");
+      const sessionInput = document.getElementById("session-id-input");
+      const connectBtn = document.getElementById("connect-btn");
+      const statusIndicator = document.getElementById("status-indicator");
 
-      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
-      const ws = new WebSocket(wsUrl);
+      let ws;
 
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === "final_response") {
-          addMessage("bot", data.content);
-        } else if (data.agent) {
-          addLog(data);
+      function connect(runId = null) {
+        if (ws) {
+          ws.close();
         }
-      };
+
+        const wsProtocol =
+          window.location.protocol === "https:" ? "wss:" : "ws:";
+        let wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+        if (runId) {
+          wsUrl += `?run_id=${runId}`;
+        }
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          statusIndicator.className =
+            "h-2 w-2 rounded-full bg-green-500 animate-pulse";
+          statusIndicator.title = "Connected";
+        };
+
+        ws.onclose = () => {
+          statusIndicator.className = "h-2 w-2 rounded-full bg-red-500";
+          statusIndicator.title = "Disconnected";
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+
+          if (data.type === "final_response") {
+            addMessage("bot", data.content);
+          } else if (data.type === "session_info") {
+            sessionInput.value = data.run_id;
+            addLog({
+              agent: "System",
+              type: "info",
+              content: `Connected to session: ${data.run_id}`,
+            });
+          } else if (data.agent) {
+            addLog(data);
+          }
+        };
+      }
+
+      // Initial connection
+      connect();
+
+      connectBtn.addEventListener("click", () => {
+        const runId = sessionInput.value.trim();
+        if (runId) {
+          // Clear logs and chat? Maybe keep logs to show transition.
+          // But logic says "in them while chatting ... existing user data is used".
+          // So we switch context.
+          chatHistory.innerHTML = "";
+          logs.innerHTML = "";
+          connect(runId);
+        }
+      });
 
       function addMessage(sender, text) {
         const div = document.createElement("div");

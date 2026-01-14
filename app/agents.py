@@ -161,7 +161,7 @@ class MultiAgentSystem:
                 """
                 try:
                     t_start = time.time()
-                    resp = await self._slate_call(self.slate.reminisce, query, limit=3)
+                    resp = await self._slate_call(self.slate.reminisce, query, limit=10)
                     t_dur = (time.time() - t_start) * 1000
                     if not hasattr(resp, "traces") or not resp.traces:
                         return f"No relevant past experiences found. ({t_dur:.2f}ms)"
@@ -176,13 +176,14 @@ class MultiAgentSystem:
             # --- Phase 1: Manager Agent ---
             await self.logger.log("Manager", "activation", "Manager agent active")
 
-            manager_tools = [remember, search_history]
+            manager_tools = [remember, search_history, save_experience]
             manager_sys_instruct = """
 You are the Manager Agent.
 Your goal is to handle the user's request.
 1. Search history (`search_history`) to see if we've handled similar requests.
-2. If simple, Answer directly.
-3. If complex, DELEGATE to the Specialist by using `remember`
+2. If user provides facts (e.g. name), use `save_experience` to store them.
+3. If simple, Answer directly.
+4. If complex, DELEGATE to the Specialist by using `remember`
    with "DELEGATE: <task details>".
 Do NOT execute complex tasks yourself.
 """
@@ -198,7 +199,11 @@ Do NOT execute complex tasks yourself.
                 system_instruction=manager_sys_instruct,
                 tools=manager_tools,
                 prompt=user_message,
-                tools_map={"remember": remember, "search_history": search_history},
+                tools_map={
+                    "remember": remember,
+                    "search_history": search_history,
+                    "save_experience": save_experience,
+                },
             )
 
             # Check if delegation happened
