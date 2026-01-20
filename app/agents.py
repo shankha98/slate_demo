@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from slate_client import CortexClient
+from rice_sdk import Client
 
 load_dotenv()
 
@@ -61,10 +61,16 @@ class SingleAgentSystem:
         self.slate_token = slate_token or SLATE_TOKEN
         self.gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
 
-        # Initialize Slate Client
-        self.slate = CortexClient(
-            address=self.slate_address, token=self.slate_token, run_id=run_id
-        )
+        # Initialize Rice Client
+        # We set environment variables so Client().connect() can find them.
+        if self.slate_address:
+            os.environ["STATE_INSTANCE_URL"] = self.slate_address
+        if self.slate_token:
+            os.environ["STATE_AUTH_TOKEN"] = self.slate_token
+
+        # Initialize Rice Client
+        self.client = Client(run_id=run_id)
+        self.client.connect()
 
         # Initialize Gemini Client
         api_key = self.gemini_key
@@ -98,9 +104,9 @@ class SingleAgentSystem:
                     t_start = time.time()
                     # We map this to Slate's 'commit' (Echoes)
                     await self._slate_call(
-                        self.slate.commit,
-                        input=topic,  # We use topic as input key
-                        outcome=fact,
+                        self.client.state.commit,
+                        input_text=topic,  # We use topic as input key
+                        output=fact,
                         action="remember_fact",
                         agent_id="assistant",
                     )
@@ -117,15 +123,17 @@ class SingleAgentSystem:
                 try:
                     t_start = time.time()
                     # We map this to Slate's 'reminisce'
-                    resp = await self._slate_call(self.slate.reminisce, topic, limit=5)
+                    traces = await self._slate_call(
+                        self.client.state.reminisce, query=topic, limit=5
+                    )
                     t_dur = (time.time() - t_start) * 1000
 
-                    if not hasattr(resp, "traces") or not resp.traces:
+                    if not traces:
                         return (
                             f"No relevant facts found about '{topic}'. ({t_dur:.2f}ms)"
                         )
 
-                    facts = [f"- {t.outcome}" for t in resp.traces]
+                    facts = [f"- {t.outcome}" for t in traces]
                     return "\n".join(facts) + f"\n(Latency: {t_dur:.2f}ms)"
                 except Exception as e:
                     return f"Error recalling facts: {e}"

@@ -5,7 +5,7 @@ import uuid
 
 from dotenv import load_dotenv
 
-from slate_client import CortexClient
+from rice_sdk import Client
 
 # Load env vars
 load_dotenv()
@@ -19,32 +19,37 @@ def main():
     run_id = "test-persistence-ricedb"  # Fixed ID for easier debugging
     print(f"Connecting to Slate at {SLATE_ADDRESS} with run_id={run_id}...")
 
+    if SLATE_ADDRESS:
+        os.environ["STATE_INSTANCE_URL"] = SLATE_ADDRESS
+    if SLATE_TOKEN:
+        os.environ["STATE_AUTH_TOKEN"] = SLATE_TOKEN
+
     try:
-        client = CortexClient(address=SLATE_ADDRESS, token=SLATE_TOKEN, run_id=run_id)
+        client = Client(run_id=run_id)
+        client.connect()
 
         # Test 1: EXACTLY like the working script but with Alice content
         print("\n--- Test 1: Mimic Working Script (Long String) ---")
         fact = f"Name: Alice UniqueString-{uuid.uuid4()}"
         print(f"Committing fact: '{fact}'")
 
-        # client.commit(
-        #     input="test input",
-        #     outcome=fact,
+        # client.state.commit(
+        #     input_text="test input",
+        #     output=fact,
         #     action="test_action",
-        #     reasoning="testing ricedb",
         # )
 
         print("Waiting 5s...")
         time.sleep(5)
 
         print("Searching 'Alice'...")
-        resp = client.reminisce("Name", limit=5)
-        if hasattr(resp, "traces"):
-            print(f"Debug: Found {len(resp.traces)} traces")
-            for t in resp.traces:
+        traces = client.state.reminisce("Name", limit=5)
+        if traces:
+            print(f"Debug: Found {len(traces)} traces")
+            for t in traces:
                 print(f" - {t.outcome} (Agent: {t.agent_id})")
 
-        if hasattr(resp, "traces") and any("Alice" in t.outcome for t in resp.traces):
+        if traces and any("Alice" in t.outcome for t in traces):
             print("✅ SUCCESS: Found 'Alice' (Test 1)")
         else:
             print("❌ FAILURE: Did not find 'Alice' (Test 1)")
@@ -55,33 +60,33 @@ def main():
         outcome = "Name: Bob"
         print(f"Committing: Action='{action}', Outcome='{outcome}'")
 
-        # client.commit(
-        #     input=action, outcome=outcome, action=action, agent_id="specialist"
+        # client.state.commit(
+        #     input_text=action, output=outcome, action=action, agent_id="specialist"
         # )
 
         print("Waiting 5s...")
         time.sleep(5)
 
         print("Searching 'Bob'...")
-        resp = client.reminisce("Name", limit=5)
-        if hasattr(resp, "traces"):
-            print(f"Debug: Found {len(resp.traces)} traces")
-            for t in resp.traces:
+        traces = client.state.reminisce("Name", limit=5)
+        if traces:
+            print(f"Debug: Found {len(traces)} traces")
+            for t in traces:
                 print(f" - {t.outcome} (Agent: {t.agent_id})")
 
-        if hasattr(resp, "traces") and any("Bob" in t.outcome for t in resp.traces):
+        if traces and any("Bob" in t.outcome for t in traces):
             print("✅ SUCCESS: Found 'Bob' (Test 2)")
         else:
             print("❌ FAILURE: Did not find 'Bob' (Test 2)")
 
         print("Searching 'user's name'...")
-        resp = client.reminisce("user's name", limit=5)
-        if hasattr(resp, "traces"):
-            print(f"Debug: Found {len(resp.traces)} traces")
-            for t in resp.traces:
+        traces = client.state.reminisce("user's name", limit=5)
+        if traces:
+            print(f"Debug: Found {len(traces)} traces")
+            for t in traces:
                 print(f" - {t.outcome} (Agent: {t.agent_id})")
 
-        if hasattr(resp, "traces") and any("Bob" in t.outcome for t in resp.traces):
+        if traces and any("Bob" in t.outcome for t in traces):
             print("✅ SUCCESS: Found 'Bob' via semantic query (Test 2)")
         else:
             print("❌ FAILURE: Did not find 'Bob' via semantic query (Test 2)")

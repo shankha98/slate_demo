@@ -4,7 +4,7 @@ import time
 
 from dotenv import load_dotenv
 
-from slate_client import CortexClient
+from rice_sdk import Client
 
 # Load env vars
 load_dotenv()
@@ -17,17 +17,22 @@ def main():
     print(f"Connecting to Slate at {SLATE_ADDRESS}...")
     run_id = "test-ricedb-real-v1"
 
+    if SLATE_ADDRESS:
+        os.environ["STATE_INSTANCE_URL"] = SLATE_ADDRESS
+    if SLATE_TOKEN:
+        os.environ["STATE_AUTH_TOKEN"] = SLATE_TOKEN
+
     try:
-        client = CortexClient(address=SLATE_ADDRESS, token=SLATE_TOKEN, run_id=run_id)
+        client = Client(run_id=run_id)
+        client.connect()
 
         # 1. Commit a unique fact
         fact = f"RiceDB Test Timestamp {time.time()}"
         print(f"Committing fact: '{fact}'")
-        client.commit(
-            input="test input",
-            outcome=fact,
+        client.state.commit(
+            input_text="test input",
+            output=fact,
             action="test_action",
-            reasoning="testing ricedb",
         )
 
         print("Commit successful (no exception raised).")
@@ -37,11 +42,11 @@ def main():
 
         # 3. Reminisce (Search)
         print("Searching for fact...")
-        resp = client.reminisce("RiceDB Test", limit=5)
+        traces = client.state.reminisce("RiceDB Test", limit=5)
 
         found = False
-        if hasattr(resp, "traces"):
-            for trace in resp.traces:
+        if traces:
+            for trace in traces:
                 print(f"Found trace: {trace.outcome}")
                 if fact in trace.outcome:
                     found = True

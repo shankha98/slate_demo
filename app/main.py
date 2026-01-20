@@ -11,8 +11,6 @@ from fastapi.templating import Jinja2Templates
 
 from app.agents import AgentLogger
 
-# from slate_client import CortexClient # Removed startup check dependency
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

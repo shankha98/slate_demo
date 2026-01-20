@@ -1,9 +1,0 @@
-[build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "slate-client"
-version = "0.1.0"
-description = "Python client for Slate Cortex Service"
-dependencies = ["grpcio>=1.0.0", "protobuf>=4.0.0"]

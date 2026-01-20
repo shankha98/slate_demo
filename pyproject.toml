@@ -7,15 +7,15 @@ requires-python = ">=3.14"
 dependencies = [
     "google-genai>=1.56.0",
     "python-dotenv>=1.2.1",
-    "slate-client",
     "fastapi>=0.128.0",
     "uvicorn>=0.27.0",
     "websockets>=12.0",
     "jinja2>=3.1.3",
+    "rice-sdk",
 ]
 
 [tool.uv.sources]
-slate-client = { path = "./slate_client/python", editable = true }
+rice-sdk = { git = "https://github.com/shankha98/rice-python-sdk.git" }
 
 [dependency-groups]
 dev = [
@@ -29,7 +29,7 @@ dev = [
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-exclude = ["slate_client", "examples"]
+exclude = ["examples"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
