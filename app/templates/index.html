@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -174,25 +174,63 @@
               id="init-gemini-key"
               class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               placeholder="AIza..."
+              value="{{ gemini_key }}"
             />
           </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Slate Token</label>
-            <input
-              type="password"
-              id="init-slate-token"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="Token..."
-            />
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Slate Address</label>
-            <input
-              type="text"
-              id="init-slate-address"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="host:port"
-            />
+          <div class="grid grid-cols-1 gap-2">
+            <label class="text-sm font-bold mt-2">State Service (Memory)</label>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Instance URL</label
+              >
+              <input
+                type="text"
+                id="init-state-url"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="grpc.url..."
+                value="{{ state_instance_url }}"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Auth Token</label
+              >
+              <input
+                type="password"
+                id="init-state-token"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Token..."
+                value="{{ state_auth_token }}"
+              />
+            </div>
+
+            <label class="text-sm font-bold mt-2"
+              >Storage Service (RiceDB)</label
+            >
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Instance URL</label
+              >
+              <input
+                type="text"
+                id="init-storage-url"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="api.url..."
+                value="{{ storage_instance_url }}"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Auth Token</label
+              >
+              <input
+                type="password"
+                id="init-storage-token"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Token..."
+                value="{{ storage_auth_token }}"
+              />
+            </div>
           </div>
 
           <div id="init-error" class="text-sm text-destructive hidden"></div>
@@ -235,23 +273,57 @@
               placeholder="AIza..."
             />
           </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Slate Token</label>
-            <input
-              type="password"
-              id="slate-token"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="Token..."
-            />
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Slate Address</label>
-            <input
-              type="text"
-              id="slate-address"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="host:port"
-            />
+
+          <div class="grid grid-cols-1 gap-2">
+            <label class="text-sm font-bold mt-2">State Service (Memory)</label>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Instance URL</label
+              >
+              <input
+                type="text"
+                id="state-url"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="grpc.url..."
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Auth Token</label
+              >
+              <input
+                type="password"
+                id="state-token"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Token..."
+              />
+            </div>
+
+            <label class="text-sm font-bold mt-2"
+              >Storage Service (RiceDB)</label
+            >
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Instance URL</label
+              >
+              <input
+                type="text"
+                id="storage-url"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="api.url..."
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-muted-foreground"
+                >Auth Token</label
+              >
+              <input
+                type="password"
+                id="storage-token"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Token..."
+              />
+            </div>
           </div>
           <div class="border-t border-border pt-4 mt-4">
             <label class="text-sm font-medium">Slate Memory ID (run_id)</label>
@@ -1710,11 +1782,16 @@
 
       // Inputs
       const initGeminiKey = document.getElementById("init-gemini-key");
-      const initSlateToken = document.getElementById("init-slate-token");
-      const initSlateAddress = document.getElementById("init-slate-address");
+      const initStateUrl = document.getElementById("init-state-url");
+      const initStateToken = document.getElementById("init-state-token");
+      const initStorageUrl = document.getElementById("init-storage-url");
+      const initStorageToken = document.getElementById("init-storage-token");
+
       const geminiKeyInput = document.getElementById("gemini-key");
-      const slateTokenInput = document.getElementById("slate-token");
-      const slateAddressInput = document.getElementById("slate-address");
+      const stateUrlInput = document.getElementById("state-url");
+      const stateTokenInput = document.getElementById("state-token");
+      const storageUrlInput = document.getElementById("storage-url");
+      const storageTokenInput = document.getElementById("storage-token");
 
       let ws;
 
@@ -1745,35 +1822,64 @@
       function getStoredCreds() {
         return {
           geminiKey: localStorage.getItem("gemini_api_key"),
-          slateToken: localStorage.getItem("slate_token"),
-          slateAddress: localStorage.getItem("slate_address"),
+          stateUrl: localStorage.getItem("state_url"),
+          stateToken: localStorage.getItem("state_token"),
+          storageUrl: localStorage.getItem("storage_url"),
+          storageToken: localStorage.getItem("storage_token"),
           runId: getRunId(),
         };
       }
 
-      function saveCreds(geminiKey, slateToken, slateAddress) {
+      function saveCreds(
+        geminiKey,
+        stateUrl,
+        stateToken,
+        storageUrl,
+        storageToken,
+      ) {
         localStorage.setItem("gemini_api_key", geminiKey);
-        localStorage.setItem("slate_token", slateToken);
-        localStorage.setItem("slate_address", slateAddress);
+        localStorage.setItem("state_url", stateUrl);
+        localStorage.setItem("state_token", stateToken);
+        if (storageUrl) localStorage.setItem("storage_url", storageUrl);
+        if (storageToken) localStorage.setItem("storage_token", storageToken);
 
         // Sync inputs
         geminiKeyInput.value = geminiKey;
-        slateTokenInput.value = slateToken;
-        slateAddressInput.value = slateAddress;
+        stateUrlInput.value = stateUrl;
+        stateTokenInput.value = stateToken;
+        storageUrlInput.value = storageUrl || "";
+        storageTokenInput.value = storageToken || "";
+
         initGeminiKey.value = geminiKey;
-        initSlateToken.value = slateToken;
-        initSlateAddress.value = slateAddress;
+        initStateUrl.value = stateUrl;
+        initStateToken.value = stateToken;
+        initStorageUrl.value = storageUrl || "";
+        initStorageToken.value = storageToken || "";
       }
 
       function checkCreds() {
         const creds = getStoredCreds();
-        if (creds.geminiKey && creds.slateToken && creds.slateAddress) {
+        // Storage is optional in UI check? Maybe, but if provided, use it.
+        // We require gemini + state service at minimum.
+        if (creds.geminiKey && creds.stateUrl && creds.stateToken) {
           initialModal.classList.add("hidden");
           geminiKeyInput.value = creds.geminiKey;
-          slateTokenInput.value = creds.slateToken;
-          slateAddressInput.value = creds.slateAddress;
+          stateUrlInput.value = creds.stateUrl;
+          stateTokenInput.value = creds.stateToken;
+          storageUrlInput.value = creds.storageUrl || "";
+          storageTokenInput.value = creds.storageToken || "";
           return true;
         } else {
+          // If we have default values from backend (via HTML values), we can check them too.
+          if (
+            initGeminiKey.value &&
+            initStateUrl.value &&
+            initStateToken.value
+          ) {
+            // Pre-fill localStorage if empty? No, let user confirm.
+            // Just ensure UI reflects it (which it does via HTML value attr).
+            // We could auto-connect? Maybe not, better to let user confirm.
+          }
           initialModal.classList.remove("hidden");
           return false;
         }
@@ -1788,18 +1894,21 @@
       if (initConnectBtn) {
         initConnectBtn.addEventListener("click", () => {
           const gKey = initGeminiKey.value.trim();
-          const sToken = initSlateToken.value.trim();
-          const sAddr = initSlateAddress.value.trim();
+          const sUrl = initStateUrl.value.trim();
+          const sToken = initStateToken.value.trim();
+          const stUrl = initStorageUrl.value.trim();
+          const stToken = initStorageToken.value.trim();
 
-          if (!gKey || !sToken || !sAddr) {
+          if (!gKey || !sUrl || !sToken) {
             if (initError) {
-              initError.textContent = "All fields are required.";
+              initError.textContent =
+                "Gemini Key and State Service details are required.";
               initError.classList.remove("hidden");
             }
             return;
           }
 
-          saveCreds(gKey, sToken, sAddr);
+          saveCreds(gKey, sUrl, sToken, stUrl, stToken);
           if (initialModal) initialModal.classList.add("hidden");
           connect();
         });
@@ -1810,6 +1919,15 @@
         // Populate run_id input when opening settings
         const runIdInput = document.getElementById("run-id-input");
         if (runIdInput) runIdInput.value = getRunId();
+
+        // Sync inputs from localStorage just in case
+        const creds = getStoredCreds();
+        geminiKeyInput.value = creds.geminiKey || "";
+        stateUrlInput.value = creds.stateUrl || "";
+        stateTokenInput.value = creds.stateToken || "";
+        storageUrlInput.value = creds.storageUrl || "";
+        storageTokenInput.value = creds.storageToken || "";
+
         settingsModal.classList.remove("hidden");
       });
 
@@ -1839,16 +1957,20 @@
 
       saveSettingsBtn.addEventListener("click", () => {
         const gKey = geminiKeyInput.value.trim();
-        const sToken = slateTokenInput.value.trim();
-        const sAddr = slateAddressInput.value.trim();
+        const sUrl = stateUrlInput.value.trim();
+        const sToken = stateTokenInput.value.trim();
+        const stUrl = storageUrlInput.value.trim();
+        const stToken = storageTokenInput.value.trim();
 
-        if (!gKey || !sToken || !sAddr) {
-          alert("All fields are required.");
+        if (!gKey || !sUrl || !sToken) {
+          alert("Gemini Key and State Service details are required.");
           return;
         }
 
-        saveCreds(gKey, sToken, sAddr);
+        saveCreds(gKey, sUrl, sToken, stUrl, stToken);
         settingsModal.classList.add("hidden");
+        // Reconnect with new settings?
+        connect();
       });
 
       clearSettingsBtn.addEventListener("click", () => {
@@ -1889,8 +2011,14 @@
         params.append("run_id", creds.runId); // Persistent Slate memory ID
         params.append("session_id", currentSessionId); // New chat session ID
         params.append("gemini_key", creds.geminiKey);
-        params.append("slate_token", creds.slateToken);
-        params.append("slate_address", creds.slateAddress);
+
+        // Pass new params
+        params.append("state_instance_url", creds.stateUrl);
+        params.append("state_auth_token", creds.stateToken);
+        if (creds.storageUrl)
+          params.append("storage_instance_url", creds.storageUrl);
+        if (creds.storageToken)
+          params.append("storage_auth_token", creds.storageToken);
 
         wsUrl += `?${params.toString()}`;
 
@@ -1985,7 +2113,7 @@
             latencyColor = "bg-yellow-900 text-yellow-300"; // medium 100-500ms
           }
           latencyBadge = `<span class="${latencyColor} text-[10px] px-1.5 py-0.5 rounded font-mono ml-1">${latency.toFixed(
-            2
+            2,
           )}ms</span>`;
         }
 
@@ -2005,7 +2133,7 @@
               ${toolBadge}${latencyBadge}
             </div>
             <div class="text-zinc-300 whitespace-pre-wrap leading-relaxed">${escapeHtml(
-              data.content
+              data.content,
             )}</div>
         `;
 

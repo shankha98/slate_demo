@@ -15,9 +15,6 @@ load_dotenv()
 # Configuration
 GEMINI_MODEL = "gemini-2.5-flash"
 
-SLATE_ADDRESS = os.getenv("SLATE_ADDRESS", "localhost:50051")
-SLATE_TOKEN = os.getenv("SLATE_TOKEN", "")
-
 
 class AgentLogger:
     def __init__(self, callback: Callable[[dict], Any]):
@@ -47,26 +44,58 @@ class SingleAgentSystem:
         run_id: str,
         logger: AgentLogger,
         gemini_key: str | None = None,
+        state_instance_url: str | None = None,
+        state_auth_token: str | None = None,
+        storage_instance_url: str | None = None,
+        storage_auth_token: str | None = None,
+        # Legacy args for backward compat
         slate_token: str | None = None,
         slate_address: str | None = None,
     ):
         self.run_id = run_id
         self.logger = logger
 
+        # Consolidate legacy args
+        state_instance_url = state_instance_url or slate_address
+        state_auth_token = state_auth_token or slate_token
+
         # Configuration Priorities:
         # 1. Passed arguments (from Frontend/WebSocket)
-        # 2. Environment Variables (from .env)
+        # 2. STATE_... Environment Variables (Rice SDK)
+        # 3. SLATE_... Environment Variables (Legacy)
 
-        self.slate_address = slate_address or SLATE_ADDRESS
-        self.slate_token = slate_token or SLATE_TOKEN
+        self.state_instance_url = (
+            state_instance_url
+            or os.getenv("STATE_INSTANCE_URL")
+            or os.getenv("SLATE_ADDRESS")
+            or "localhost:50051"
+        )
+        self.state_auth_token = (
+            state_auth_token
+            or os.getenv("STATE_AUTH_TOKEN")
+            or os.getenv("SLATE_TOKEN")
+            or ""
+        )
+
+        # Storage config
+        self.storage_instance_url = storage_instance_url or os.getenv(
+            "STORAGE_INSTANCE_URL"
+        )
+        self.storage_auth_token = storage_auth_token or os.getenv("STORAGE_AUTH_TOKEN")
+
         self.gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
 
         # Initialize Rice Client
         # We set environment variables so Client().connect() can find them.
-        if self.slate_address:
-            os.environ["STATE_INSTANCE_URL"] = self.slate_address
-        if self.slate_token:
-            os.environ["STATE_AUTH_TOKEN"] = self.slate_token
+        if self.state_instance_url:
+            os.environ["STATE_INSTANCE_URL"] = self.state_instance_url
+        if self.state_auth_token:
+            os.environ["STATE_AUTH_TOKEN"] = self.state_auth_token
+
+        if self.storage_instance_url:
+            os.environ["STORAGE_INSTANCE_URL"] = self.storage_instance_url
+        if self.storage_auth_token:
+            os.environ["STORAGE_AUTH_TOKEN"] = self.storage_auth_token
 
         # Initialize Rice Client
         self.client = Client(run_id=run_id)

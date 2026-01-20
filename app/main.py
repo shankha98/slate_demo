@@ -1,3 +1,4 @@
+import os
 import json
 import sys
 import uuid
@@ -41,7 +42,21 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def get(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+    # Pass defaults from environment
+    defaults = {
+        "gemini_key": os.getenv("GEMINI_API_KEY", ""),
+        "state_instance_url": os.getenv("STATE_INSTANCE_URL", "")
+        or os.getenv("SLATE_ADDRESS", ""),
+        "state_auth_token": os.getenv("STATE_AUTH_TOKEN", "")
+        or os.getenv("SLATE_TOKEN", ""),
+        "storage_instance_url": os.getenv("STORAGE_INSTANCE_URL", ""),
+        "storage_auth_token": os.getenv("STORAGE_AUTH_TOKEN", ""),
+        "storage_user": os.getenv("STORAGE_USER", "admin"),
+        "storage_http_port": os.getenv("STORAGE_HTTP_PORT", "80"),
+    }
+    return templates.TemplateResponse(
+        request=request, name="index.html", context=defaults
+    )
 
 
 class ConnectionManager:
@@ -82,8 +97,16 @@ async def websocket_endpoint(
     # Extract optional config from query params
     query_params = websocket.query_params
     gemini_key = query_params.get("gemini_key")
+
+    # Legacy params
     slate_token = query_params.get("slate_token")
     slate_address = query_params.get("slate_address")
+
+    # New params
+    state_instance_url = query_params.get("state_instance_url")
+    state_auth_token = query_params.get("state_auth_token")
+    storage_instance_url = query_params.get("storage_instance_url")
+    storage_auth_token = query_params.get("storage_auth_token")
 
     # Notify client of both IDs
     await websocket.send_json(
@@ -101,6 +124,10 @@ async def websocket_endpoint(
         run_id=run_id,
         logger=logger,
         gemini_key=gemini_key,
+        state_instance_url=state_instance_url,
+        state_auth_token=state_auth_token,
+        storage_instance_url=storage_instance_url,
+        storage_auth_token=storage_auth_token,
         slate_token=slate_token,
         slate_address=slate_address,
     )
