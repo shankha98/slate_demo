@@ -7,3 +7,6 @@ __pycache__/
 docs/
 .pytest_cache/
 .ruff_cache/
+slate-plugin/
+.slate_run_id
+CLAUDE.md

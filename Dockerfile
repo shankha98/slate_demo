@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-# Install uv
+# Install uv (updated lightweight package manager)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /app
@@ -8,11 +8,13 @@ WORKDIR /app
 # Copy dependency definition
 COPY pyproject.toml uv.lock ./
 # Copy local dependency directory structure
+# Note: slate-client is referenced as ./slate_client/python in pyproject.toml
 COPY slate_client ./slate_client
 
 # Install dependencies
 # --frozen ensures we stick to uv.lock
-RUN uv sync --frozen
+# --no-dev excludes dev dependencies (ruff, pytest, etc.) for production
+RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY app ./app
